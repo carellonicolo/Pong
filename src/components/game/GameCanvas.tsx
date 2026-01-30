@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
 import { GameState, THEME_PRESETS, PowerUpType } from '@/types/game';
 
 interface GameCanvasProps {
@@ -25,18 +25,21 @@ const POWER_UP_ICONS: Record<PowerUpType, string> = {
   multiBall: '◉',
 };
 
-export const GameCanvas: React.FC<GameCanvasProps> = ({
+export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
   gameState,
   width,
   height,
   onMouseMove,
   onTouchMove,
-}) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+}, ref) => {
+  const internalRef = useRef<HTMLCanvasElement>(null);
   const theme = THEME_PRESETS[gameState.config.theme];
 
+  // Expose the internal ref to parent components
+  useImperativeHandle(ref, () => internalRef.current!);
+
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = internalRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -173,7 +176,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
   return (
     <canvas
-      ref={canvasRef}
+      ref={internalRef}
       width={width}
       height={height}
       onMouseMove={onMouseMove}
@@ -187,4 +190,6 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       }}
     />
   );
-};
+});
+
+GameCanvas.displayName = 'GameCanvas';

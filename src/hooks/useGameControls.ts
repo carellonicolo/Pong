@@ -44,17 +44,18 @@ export const useGameControls = ({
     };
   }, [togglePause]);
 
-  // Continuous keyboard movement
+  // Continuous keyboard movement - works even when paused to position paddle
   useEffect(() => {
-    if (isPaused) return;
-
     let animationId: number;
     let lastPaddle1Y: number | null = null;
     let lastPaddle2Y: number | null = null;
 
     const updatePaddles = () => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {
+        animationId = requestAnimationFrame(updatePaddles);
+        return;
+      }
 
       // Player 1 controls (W/S)
       if (keysPressed.current.has('w')) {
@@ -84,38 +85,34 @@ export const useGameControls = ({
     animationId = requestAnimationFrame(updatePaddles);
 
     return () => cancelAnimationFrame(animationId);
-  }, [isPaused, mode, canvasRef, movePaddle]);
+  }, [mode, canvasRef, movePaddle]);
 
-  // Mouse controls for player 1
+  // Mouse controls for player 1 - works even when paused to position paddle
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas || isPaused) return;
-
-    const rect = canvas.getBoundingClientRect();
+    const target = e.currentTarget;
+    const rect = target.getBoundingClientRect();
     const y = e.clientY - rect.top;
     movePaddle(0, y);
-  }, [canvasRef, movePaddle, isPaused]);
+  }, [movePaddle]);
 
-  // Touch controls
+  // Touch controls - works even when paused to position paddle
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas || isPaused) return;
-
     e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
+    const target = e.currentTarget;
+    const rect = target.getBoundingClientRect();
 
     Array.from(e.touches).forEach((touch) => {
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
 
       // Left side = Player 1, Right side = Player 2 (for local multiplayer)
-      if (x < canvas.width / 2) {
+      if (x < target.width / 2) {
         movePaddle(0, y);
       } else if (mode === 'local') {
         movePaddle(1, y);
       }
     });
-  }, [canvasRef, movePaddle, isPaused, mode]);
+  }, [movePaddle, mode]);
 
   return {
     handleMouseMove,

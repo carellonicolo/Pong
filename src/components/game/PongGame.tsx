@@ -42,16 +42,6 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  const handleGameOver = useCallback((winner: number) => {
-    if (onGameOver) {
-      onGameOver(
-        winner,
-        gameState.players[0].paddle.score,
-        gameState.players[1].paddle.score
-      );
-    }
-  }, [onGameOver]);
-
   const {
     gameState,
     startGame,
@@ -63,7 +53,11 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     config,
     canvasWidth: dimensions.width,
     canvasHeight: dimensions.height,
-    onGameOver: handleGameOver,
+    onGameOver: useCallback((winner: number) => {
+      if (onGameOver) {
+        onGameOver(winner, 0, 0);
+      }
+    }, [onGameOver]),
   });
 
   const { handleMouseMove, handleTouchMove } = useGameControls({
@@ -143,6 +137,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
       {/* Game Canvas */}
       <div className="relative">
         <GameCanvas
+          ref={canvasRef}
           gameState={gameState}
           width={dimensions.width}
           height={dimensions.height}
