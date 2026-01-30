@@ -1,0 +1,310 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { 
+  Gamepad2, 
+  Users, 
+  Globe, 
+  Palette, 
+  Zap, 
+  Trophy,
+  Play,
+  Settings
+} from 'lucide-react';
+import { GameConfig, GameMode, GameTheme, BallSpeed, THEME_PRESETS } from '@/types/game';
+import { cn } from '@/lib/utils';
+
+interface MainMenuProps {
+  onStartGame: (config: GameConfig) => void;
+  onViewLeaderboard?: () => void;
+}
+
+const THEME_OPTIONS: { value: GameTheme; label: string; icon: string; description: string }[] = [
+  { value: 'retro', label: 'Retro Arcade', icon: '🕹️', description: 'Neon glow, pixel vibes' },
+  { value: 'minimal', label: 'Minimal', icon: '⚪', description: 'Clean black & white' },
+  { value: 'futuristic', label: 'Futuristico', icon: '🚀', description: 'Glow & particelle' },
+  { value: 'custom', label: 'Personalizzato', icon: '🌈', description: 'Scegli i tuoi colori' },
+];
+
+const MODE_OPTIONS: { value: GameMode; label: string; icon: React.ReactNode; description: string }[] = [
+  { value: 'single', label: 'Singolo', icon: <Gamepad2 className="w-6 h-6" />, description: 'Gioca contro la CPU' },
+  { value: 'local', label: 'Locale', icon: <Users className="w-6 h-6" />, description: '2 giocatori, stesso schermo' },
+  { value: 'online', label: 'Online', icon: <Globe className="w-6 h-6" />, description: 'Sfida giocatori reali' },
+];
+
+const SPEED_OPTIONS: { value: BallSpeed; label: string }[] = [
+  { value: 'slow', label: 'Lenta' },
+  { value: 'normal', label: 'Normale' },
+  { value: 'fast', label: 'Veloce' },
+];
+
+const COLOR_PRESETS = [
+  '210 100% 50%', // Blue
+  '0 80% 50%',    // Red
+  '120 70% 45%',  // Green
+  '45 100% 50%',  // Yellow
+  '280 80% 55%',  // Purple
+  '180 70% 45%',  // Cyan
+  '320 80% 55%',  // Pink
+  '30 90% 50%',   // Orange
+];
+
+export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboard }) => {
+  const [showConfig, setShowConfig] = useState(false);
+  const [config, setConfig] = useState<GameConfig>({
+    theme: 'retro',
+    mode: 'single',
+    winScore: 5,
+    ballSpeed: 'normal',
+    powerUpsEnabled: true,
+    player1Color: THEME_PRESETS.retro.paddle1,
+    player2Color: THEME_PRESETS.retro.paddle2,
+    player1Nickname: 'Player 1',
+    player2Nickname: 'Player 2',
+  });
+
+  const handleThemeChange = (theme: GameTheme) => {
+    const themeColors = THEME_PRESETS[theme];
+    setConfig(prev => ({
+      ...prev,
+      theme,
+      player1Color: themeColors.paddle1,
+      player2Color: themeColors.paddle2,
+    }));
+  };
+
+  const handleStartGame = () => {
+    if (config.mode === 'single') {
+      setConfig(prev => ({ ...prev, player2Nickname: 'CPU' }));
+    }
+    onStartGame({
+      ...config,
+      player2Nickname: config.mode === 'single' ? 'CPU' : config.player2Nickname,
+    });
+  };
+
+  if (!showConfig) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+        <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h1 className="text-6xl md:text-8xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            PONG
+          </h1>
+          <p className="text-xl text-muted-foreground">Multiplayer Edition</p>
+        </div>
+
+        <div className="grid gap-4 w-full max-w-md animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
+          {MODE_OPTIONS.map((option) => (
+            <Button
+              key={option.value}
+              variant="outline"
+              size="lg"
+              className="h-20 justify-start gap-4 text-left hover:scale-[1.02] transition-transform"
+              onClick={() => {
+                setConfig(prev => ({ ...prev, mode: option.value }));
+                setShowConfig(true);
+              }}
+            >
+              <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                {option.icon}
+              </div>
+              <div>
+                <div className="font-semibold">{option.label}</div>
+                <div className="text-sm text-muted-foreground">{option.description}</div>
+              </div>
+            </Button>
+          ))}
+
+          {onViewLeaderboard && (
+            <Button
+              variant="ghost"
+              size="lg"
+              className="h-16 mt-4"
+              onClick={onViewLeaderboard}
+            >
+              <Trophy className="w-5 h-5 mr-2" />
+              Classifica Globale
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+      <Card className="w-full max-w-2xl">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Configura Partita
+              </CardTitle>
+              <CardDescription>
+                {MODE_OPTIONS.find(m => m.value === config.mode)?.label} -{' '}
+                {MODE_OPTIONS.find(m => m.value === config.mode)?.description}
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setShowConfig(false)}>
+              ← Indietro
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Theme Selection */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Palette className="w-4 h-4" />
+              Tema Visivo
+            </Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {THEME_OPTIONS.map((theme) => (
+                <button
+                  key={theme.value}
+                  onClick={() => handleThemeChange(theme.value)}
+                  className={cn(
+                    "p-3 rounded-lg border-2 text-left transition-all hover:scale-[1.02]",
+                    config.theme === theme.value
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <div className="text-2xl mb-1">{theme.icon}</div>
+                  <div className="text-sm font-medium">{theme.label}</div>
+                  <div className="text-xs text-muted-foreground">{theme.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Player Names */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="player1">Giocatore 1</Label>
+              <Input
+                id="player1"
+                value={config.player1Nickname}
+                onChange={(e) => setConfig(prev => ({ ...prev, player1Nickname: e.target.value }))}
+                maxLength={15}
+              />
+            </div>
+            {config.mode !== 'single' && (
+              <div className="space-y-2">
+                <Label htmlFor="player2">Giocatore 2</Label>
+                <Input
+                  id="player2"
+                  value={config.player2Nickname}
+                  onChange={(e) => setConfig(prev => ({ ...prev, player2Nickname: e.target.value }))}
+                  maxLength={15}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Paddle Colors */}
+          {config.theme === 'custom' && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Colore Racchetta 1</Label>
+                <div className="flex gap-2 flex-wrap">
+                  {COLOR_PRESETS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setConfig(prev => ({ ...prev, player1Color: color }))}
+                      className={cn(
+                        "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
+                        config.player1Color === color ? "border-foreground scale-110" : "border-muted"
+                      )}
+                      style={{ backgroundColor: `hsl(${color})` }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Colore Racchetta 2</Label>
+                <div className="flex gap-2 flex-wrap">
+                  {COLOR_PRESETS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setConfig(prev => ({ ...prev, player2Color: color }))}
+                      className={cn(
+                        "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
+                        config.player2Color === color ? "border-foreground scale-110" : "border-muted"
+                      )}
+                      style={{ backgroundColor: `hsl(${color})` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Win Score */}
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <Label>Punteggio per vincere</Label>
+              <span className="text-sm font-medium">{config.winScore}</span>
+            </div>
+            <Slider
+              value={[config.winScore]}
+              onValueChange={([value]) => setConfig(prev => ({ ...prev, winScore: value }))}
+              min={3}
+              max={21}
+              step={1}
+            />
+          </div>
+
+          {/* Ball Speed */}
+          <div className="space-y-3">
+            <Label>Velocità Palla</Label>
+            <div className="flex gap-2">
+              {SPEED_OPTIONS.map((speed) => (
+                <Button
+                  key={speed.value}
+                  variant={config.ballSpeed === speed.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setConfig(prev => ({ ...prev, ballSpeed: speed.value }))}
+                >
+                  {speed.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Power-ups Toggle */}
+          <div className="flex items-center justify-between p-4 rounded-lg border">
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-yellow-500" />
+              <div>
+                <Label htmlFor="powerups" className="cursor-pointer">Power-ups</Label>
+                <p className="text-sm text-muted-foreground">
+                  Oggetti speciali durante la partita
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="powerups"
+              checked={config.powerUpsEnabled}
+              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, powerUpsEnabled: checked }))}
+            />
+          </div>
+
+          {/* Start Button */}
+          <Button
+            size="lg"
+            className="w-full h-14 text-lg gap-2"
+            onClick={handleStartGame}
+          >
+            <Play className="w-5 h-5" />
+            {config.mode === 'online' ? 'Cerca Partita' : 'Inizia Partita'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
