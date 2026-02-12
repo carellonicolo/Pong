@@ -9,6 +9,8 @@ import {
   BALL_SPEEDS,
   POWER_UP_DURATION,
   POWER_UP_SPAWN_INTERVAL,
+  GAME_WIDTH,
+  GAME_HEIGHT,
 } from '@/types/game';
 
 const PADDLE_WIDTH = 12;
@@ -18,21 +20,19 @@ const CANVAS_PADDING = 20;
 
 interface UseGameEngineProps {
   config: GameConfig;
-  canvasWidth: number;
-  canvasHeight: number;
   onScoreUpdate?: (player1Score: number, player2Score: number) => void;
   onGameOver?: (winner: number) => void;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-const createBall = (canvasWidth: number, canvasHeight: number, speed: number): Ball => {
+const createBall = (speed: number): Ball => {
   const angle = (Math.random() * Math.PI / 4) - Math.PI / 8;
   const direction = Math.random() > 0.5 ? 1 : -1;
   
   return {
-    x: canvasWidth / 2,
-    y: canvasHeight / 2,
+    x: GAME_WIDTH / 2,
+    y: GAME_HEIGHT / 2,
     vx: Math.cos(angle) * speed * direction,
     vy: Math.sin(angle) * speed,
     radius: BALL_RADIUS,
@@ -45,16 +45,14 @@ const createPlayer = (
   nickname: string,
   color: string,
   side: 'left' | 'right',
-  canvasWidth: number,
-  canvasHeight: number,
   isAI = false
 ): Player => ({
   id,
   nickname,
   isAI,
   paddle: {
-    x: side === 'left' ? CANVAS_PADDING : canvasWidth - CANVAS_PADDING - PADDLE_WIDTH,
-    y: canvasHeight / 2 - PADDLE_HEIGHT / 2,
+    x: side === 'left' ? CANVAS_PADDING : GAME_WIDTH - CANVAS_PADDING - PADDLE_WIDTH,
+    y: GAME_HEIGHT / 2 - PADDLE_HEIGHT / 2,
     width: PADDLE_WIDTH,
     height: PADDLE_HEIGHT,
     baseHeight: PADDLE_HEIGHT,
@@ -65,18 +63,16 @@ const createPlayer = (
 
 export const useGameEngine = ({
   config,
-  canvasWidth,
-  canvasHeight,
   onScoreUpdate,
   onGameOver,
 }: UseGameEngineProps) => {
   const speed = BALL_SPEEDS[config.ballSpeed];
   
   const [gameState, setGameState] = useState<GameState>(() => ({
-    balls: [createBall(canvasWidth, canvasHeight, speed)],
+    balls: [createBall(speed)],
     players: [
-      createPlayer('p1', config.player1Nickname, config.player1Color, 'left', canvasWidth, canvasHeight),
-      createPlayer('p2', config.player2Nickname, config.player2Color, 'right', canvasWidth, canvasHeight, config.mode === 'single'),
+      createPlayer('p1', config.player1Nickname, config.player1Color, 'left'),
+      createPlayer('p2', config.player2Nickname, config.player2Color, 'right', config.mode === 'single'),
     ],
     powerUps: [],
     isPaused: true,
@@ -92,9 +88,9 @@ export const useGameEngine = ({
   const resetBall = useCallback(() => {
     setGameState(prev => ({
       ...prev,
-      balls: [createBall(canvasWidth, canvasHeight, speed)],
+      balls: [createBall(speed)],
     }));
-  }, [canvasWidth, canvasHeight, speed]);
+  }, [speed]);
 
   const spawnPowerUp = useCallback(() => {
     if (!config.powerUpsEnabled) return;
@@ -105,8 +101,8 @@ export const useGameEngine = ({
     const powerUp: PowerUp = {
       id: generateId(),
       type,
-      x: canvasWidth / 4 + Math.random() * (canvasWidth / 2),
-      y: 50 + Math.random() * (canvasHeight - 100),
+      x: GAME_WIDTH / 4 + Math.random() * (GAME_WIDTH / 2),
+      y: 50 + Math.random() * (GAME_HEIGHT - 100),
       active: true,
       duration: POWER_UP_DURATION,
     };
@@ -115,7 +111,7 @@ export const useGameEngine = ({
       ...prev,
       powerUps: [...prev.powerUps, powerUp],
     }));
-  }, [canvasWidth, canvasHeight, config.powerUpsEnabled]);
+  }, [config.powerUpsEnabled]);
 
   const applyPowerUp = useCallback((type: PowerUpType, playerIndex: number) => {
     const id = generateId();
@@ -152,7 +148,7 @@ export const useGameEngine = ({
             players: newPlayers,
           };
         case 'multiBall':
-          const extraBalls = [1, 2].map(() => createBall(canvasWidth, canvasHeight, speed));
+          const extraBalls = [1, 2].map(() => createBall(speed));
           return { ...prev, balls: [...prev.balls, ...extraBalls], players: newPlayers };
       }
 
@@ -169,16 +165,16 @@ export const useGameEngine = ({
         return { ...prev, players: newPlayers };
       });
     }, POWER_UP_DURATION);
-  }, [canvasWidth, canvasHeight, speed]);
+  }, [speed]);
 
   const checkCollisions = useCallback((ball: Ball, players: [Player, Player]) => {
     let newBall = { ...ball };
     let scored = -1;
 
     // Wall collisions (top/bottom)
-    if (newBall.y - newBall.radius <= 0 || newBall.y + newBall.radius >= canvasHeight) {
+    if (newBall.y - newBall.radius <= 0 || newBall.y + newBall.radius >= GAME_HEIGHT) {
       newBall.vy = -newBall.vy;
-      newBall.y = Math.max(newBall.radius, Math.min(canvasHeight - newBall.radius, newBall.y));
+      newBall.y = Math.max(newBall.radius, Math.min(GAME_HEIGHT - newBall.radius, newBall.y));
     }
 
     // Paddle collisions
@@ -195,10 +191,9 @@ export const useGameEngine = ({
         newBall.y >= paddleTop &&
         newBall.y <= paddleBottom
       ) {
-        // Calculate hit position for angle
         const hitPos = (newBall.y - paddleTop) / paddle.height - 0.5;
         const angle = hitPos * (Math.PI / 3);
-        const speed = Math.sqrt(newBall.vx ** 2 + newBall.vy ** 2) * 1.02; // Slight speed increase
+        const speed = Math.sqrt(newBall.vx ** 2 + newBall.vy ** 2) * 1.02;
 
         newBall.vx = Math.cos(angle) * speed * (index === 0 ? 1 : -1);
         newBall.vy = Math.sin(angle) * speed;
@@ -208,18 +203,17 @@ export const useGameEngine = ({
 
     // Score detection
     if (newBall.x - newBall.radius <= 0) {
-      scored = 1; // Player 2 scores
-    } else if (newBall.x + newBall.radius >= canvasWidth) {
-      scored = 0; // Player 1 scores
+      scored = 1;
+    } else if (newBall.x + newBall.radius >= GAME_WIDTH) {
+      scored = 0;
     }
 
     return { ball: newBall, scored };
-  }, [canvasWidth, canvasHeight]);
+  }, []);
 
   const updateAI = useCallback((player: Player, balls: Ball[]): number => {
     if (!player.isAI || balls.length === 0) return player.paddle.y;
 
-    // Find the closest ball moving towards AI
     const relevantBall = balls.reduce((closest, ball) => {
       if (ball.vx > 0 && (!closest || ball.x > closest.x)) return ball;
       return closest;
@@ -229,10 +223,10 @@ export const useGameEngine = ({
 
     const targetY = relevantBall.y - player.paddle.height / 2;
     const diff = targetY - player.paddle.y;
-    const speed = 5;
+    const aiSpeed = 5;
 
-    if (Math.abs(diff) < speed) return targetY;
-    return player.paddle.y + (diff > 0 ? speed : -speed);
+    if (Math.abs(diff) < aiSpeed) return targetY;
+    return player.paddle.y + (diff > 0 ? aiSpeed : -aiSpeed);
   }, []);
 
   const gameLoop = useCallback(() => {
@@ -249,7 +243,7 @@ export const useGameEngine = ({
           ...newPlayers[1],
           paddle: {
             ...newPlayers[1].paddle,
-            y: Math.max(0, Math.min(canvasHeight - newPlayers[1].paddle.height, updateAI(newPlayers[1], newBalls))),
+            y: Math.max(0, Math.min(GAME_HEIGHT - newPlayers[1].paddle.height, updateAI(newPlayers[1], newBalls))),
           },
         };
       }
@@ -271,8 +265,7 @@ export const useGameEngine = ({
             return updatedBall;
           }
           
-          // Reset ball position
-          return createBall(canvasWidth, canvasHeight, speed);
+          return createBall(speed);
         }
 
         // Check power-up collisions
@@ -294,7 +287,7 @@ export const useGameEngine = ({
       // Remove scored extra balls
       newBalls = newBalls.filter((_, i) => !ballsToRemove.includes(i));
       if (newBalls.length === 0) {
-        newBalls = [createBall(canvasWidth, canvasHeight, speed)];
+        newBalls = [createBall(speed)];
       }
 
       // Power-up spawning
@@ -314,7 +307,7 @@ export const useGameEngine = ({
     });
 
     animationFrameRef.current = requestAnimationFrame(gameLoop);
-  }, [canvasWidth, canvasHeight, speed, config, checkCollisions, updateAI, applyPowerUp, spawnPowerUp]);
+  }, [speed, config, checkCollisions, updateAI, applyPowerUp, spawnPowerUp]);
 
   const startGame = useCallback(() => {
     setGameState(prev => ({ ...prev, isPaused: false }));
@@ -332,10 +325,10 @@ export const useGameEngine = ({
   const restartGame = useCallback(() => {
     activePowerUpsRef.current.clear();
     setGameState({
-      balls: [createBall(canvasWidth, canvasHeight, speed)],
+      balls: [createBall(speed)],
       players: [
-        createPlayer('p1', config.player1Nickname, config.player1Color, 'left', canvasWidth, canvasHeight),
-        createPlayer('p2', config.player2Nickname, config.player2Color, 'right', canvasWidth, canvasHeight, config.mode === 'single'),
+        createPlayer('p1', config.player1Nickname, config.player1Color, 'left'),
+        createPlayer('p2', config.player2Nickname, config.player2Color, 'right', config.mode === 'single'),
       ],
       powerUps: [],
       isPaused: true,
@@ -343,7 +336,7 @@ export const useGameEngine = ({
       winner: null,
       config,
     });
-  }, [canvasWidth, canvasHeight, speed, config]);
+  }, [speed, config]);
 
   const movePaddle = useCallback((playerIndex: number, y: number) => {
     setGameState(prev => {
@@ -353,12 +346,12 @@ export const useGameEngine = ({
         ...newPlayers[playerIndex],
         paddle: {
           ...paddle,
-          y: Math.max(0, Math.min(canvasHeight - paddle.height, y - paddle.height / 2)),
+          y: Math.max(0, Math.min(GAME_HEIGHT - paddle.height, y - paddle.height / 2)),
         },
       };
       return { ...prev, players: newPlayers };
     });
-  }, [canvasHeight]);
+  }, []);
 
   // Start game loop
   useEffect(() => {

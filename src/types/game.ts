@@ -126,3 +126,8 @@ export const BALL_SPEEDS: Record<BallSpeed, number> = {
 
 export const POWER_UP_DURATION = 8000; // 8 seconds
 export const POWER_UP_SPAWN_INTERVAL = 10000; // 10 seconds
+
+// Fixed internal game resolution - physics always run at this size
+// The canvas is CSS-scaled to fit the viewport without affecting gameplay
+export const GAME_WIDTH = 1000;
+export const GAME_HEIGHT = 625;

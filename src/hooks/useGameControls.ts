@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { GameMode } from '@/types/game';
+import { GameMode, GAME_WIDTH, GAME_HEIGHT } from '@/types/game';
 
 interface UseGameControlsProps {
   mode: GameMode;
@@ -8,6 +8,24 @@ interface UseGameControlsProps {
   togglePause: () => void;
   isPaused: boolean;
 }
+
+/**
+ * Convert screen-space Y coordinate to game-space Y coordinate.
+ * The canvas internal resolution is fixed (GAME_WIDTH x GAME_HEIGHT),
+ * but it's CSS-scaled to fit the viewport. This converts mouse/touch
+ * positions from screen pixels to the internal coordinate system.
+ */
+const screenToGameY = (screenY: number, canvas: HTMLCanvasElement): number => {
+  const rect = canvas.getBoundingClientRect();
+  const ratioY = GAME_HEIGHT / rect.height;
+  return (screenY - rect.top) * ratioY;
+};
+
+const screenToGameX = (screenX: number, canvas: HTMLCanvasElement): number => {
+  const rect = canvas.getBoundingClientRect();
+  const ratioX = GAME_WIDTH / rect.width;
+  return (screenX - rect.left) * ratioX;
+};
 
 export const useGameControls = ({
   mode,
@@ -57,25 +75,25 @@ export const useGameControls = ({
         return;
       }
 
-      // Player 1 controls (W/S)
+      // Player 1 controls (W/S) - uses GAME_HEIGHT for bounds
       if (keysPressed.current.has('w')) {
-        lastPaddle1Y = (lastPaddle1Y ?? canvas.height / 2) - paddleSpeed;
+        lastPaddle1Y = (lastPaddle1Y ?? GAME_HEIGHT / 2) - paddleSpeed;
         movePaddle(0, Math.max(50, lastPaddle1Y));
       }
       if (keysPressed.current.has('s')) {
-        lastPaddle1Y = (lastPaddle1Y ?? canvas.height / 2) + paddleSpeed;
-        movePaddle(0, Math.min(canvas.height - 50, lastPaddle1Y));
+        lastPaddle1Y = (lastPaddle1Y ?? GAME_HEIGHT / 2) + paddleSpeed;
+        movePaddle(0, Math.min(GAME_HEIGHT - 50, lastPaddle1Y));
       }
 
       // Player 2 controls (Arrow keys) - only for local multiplayer
       if (mode === 'local') {
         if (keysPressed.current.has('arrowup')) {
-          lastPaddle2Y = (lastPaddle2Y ?? canvas.height / 2) - paddleSpeed;
+          lastPaddle2Y = (lastPaddle2Y ?? GAME_HEIGHT / 2) - paddleSpeed;
           movePaddle(1, Math.max(50, lastPaddle2Y));
         }
         if (keysPressed.current.has('arrowdown')) {
-          lastPaddle2Y = (lastPaddle2Y ?? canvas.height / 2) + paddleSpeed;
-          movePaddle(1, Math.min(canvas.height - 50, lastPaddle2Y));
+          lastPaddle2Y = (lastPaddle2Y ?? GAME_HEIGHT / 2) + paddleSpeed;
+          movePaddle(1, Math.min(GAME_HEIGHT - 50, lastPaddle2Y));
         }
       }
 
@@ -87,29 +105,27 @@ export const useGameControls = ({
     return () => cancelAnimationFrame(animationId);
   }, [mode, canvasRef, movePaddle]);
 
-  // Mouse controls for player 1 - works even when paused to position paddle
+  // Mouse controls for player 1 - converts screen coords to game coords
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const target = e.currentTarget;
-    const rect = target.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    movePaddle(0, y);
+    const canvas = e.currentTarget;
+    const gameY = screenToGameY(e.clientY, canvas);
+    movePaddle(0, gameY);
   }, [movePaddle]);
 
-  // Touch controls - works even when paused to position paddle
+  // Touch controls - converts screen coords to game coords
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    const target = e.currentTarget;
-    const rect = target.getBoundingClientRect();
+    const canvas = e.currentTarget;
 
     Array.from(e.touches).forEach((touch) => {
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
+      const gameX = screenToGameX(touch.clientX, canvas);
+      const gameY = screenToGameY(touch.clientY, canvas);
 
       // Left side = Player 1, Right side = Player 2 (for local multiplayer)
-      if (x < target.width / 2) {
-        movePaddle(0, y);
+      if (gameX < GAME_WIDTH / 2) {
+        movePaddle(0, gameY);
       } else if (mode === 'local') {
-        movePaddle(1, y);
+        movePaddle(1, gameY);
       }
     });
   }, [movePaddle, mode]);
