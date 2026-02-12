@@ -5,7 +5,7 @@ import { GameConfig, THEME_PRESETS } from '@/types/game';
 import { useGameEngine } from '@/hooks/useGameEngine';
 import { useGameControls } from '@/hooks/useGameControls';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Pause, Play, RotateCcw, Home, Volume2, VolumeX } from 'lucide-react';
+import { Pause, Play, RotateCcw, Home, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +30,23 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Fullscreen toggle
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  }, []);
+
+  // Sync state when user exits fullscreen via Esc
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
 
   // Calculate responsive canvas size
   useEffect(() => {
@@ -125,6 +142,16 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
             style={{ color: `hsl(${theme.foreground})` }}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleFullscreen}
+            style={{ color: `hsl(${theme.foreground})` }}
+            title={isFullscreen ? 'Esci dal fullscreen' : 'Fullscreen'}
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </Button>
 
           {!gameState.isGameOver && (
