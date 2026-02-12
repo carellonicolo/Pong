@@ -53,10 +53,13 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     const updateDimensions = () => {
       if (containerRef.current) {
         const container = containerRef.current;
-        const maxWidth = Math.min(container.clientWidth - 32, 1000);
+        const fullscreen = !!document.fullscreenElement;
+        const padding = fullscreen ? 16 : 32;
+        const headerSpace = fullscreen ? 80 : 200;
+        const maxW = fullscreen ? container.clientWidth - padding : Math.min(container.clientWidth - padding, 1000);
         const aspectRatio = 16 / 10;
-        const width = maxWidth;
-        const height = Math.min(width / aspectRatio, window.innerHeight - 200);
+        const width = maxW;
+        const height = Math.min(width / aspectRatio, window.innerHeight - headerSpace);
         
         setDimensions({ 
           width: Math.floor(width), 
@@ -67,7 +70,11 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
 
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    document.addEventListener('fullscreenchange', updateDimensions);
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      document.removeEventListener('fullscreenchange', updateDimensions);
+    };
   }, []);
 
   const {
