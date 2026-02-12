@@ -6,6 +6,16 @@ import { useGameEngine } from '@/hooks/useGameEngine';
 import { useGameControls } from '@/hooks/useGameControls';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Pause, Play, RotateCcw, Home, Volume2, VolumeX } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface PongGameProps {
   config: GameConfig;
@@ -19,6 +29,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   const isMobile = useIsMobile();
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Calculate responsive canvas size
   useEffect(() => {
@@ -93,7 +104,13 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
         <Button
           variant="ghost"
           size="sm"
-          onClick={onBackToMenu}
+          onClick={() => {
+            if (!gameState.isGameOver && (gameState.players[0].paddle.score > 0 || gameState.players[1].paddle.score > 0)) {
+              setShowExitConfirm(true);
+            } else {
+              onBackToMenu();
+            }
+          }}
           style={{ color: `hsl(${theme.foreground})` }}
         >
           <Home className="w-4 h-4 mr-2" />
@@ -203,6 +220,21 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
           ESC o SPAZIO per mettere in pausa
         </div>
       )}
+      {/* Exit Confirmation Dialog */}
+      <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Uscire dalla partita?</AlertDialogTitle>
+            <AlertDialogDescription>
+              La partita è in corso ({gameState.players[0].paddle.score} - {gameState.players[1].paddle.score}). Se esci perderai i progressi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continua a giocare</AlertDialogCancel>
+            <AlertDialogAction onClick={onBackToMenu}>Esci</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
