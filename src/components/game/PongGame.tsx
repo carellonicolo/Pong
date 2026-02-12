@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { GameCanvas } from './GameCanvas';
-import { GameConfig, THEME_PRESETS } from '@/types/game';
+import { GameConfig, THEME_PRESETS, GAME_WIDTH, GAME_HEIGHT } from '@/types/game';
 import { useGameEngine } from '@/hooks/useGameEngine';
 import { useGameControls } from '@/hooks/useGameControls';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -28,7 +28,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isMobile = useIsMobile();
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+  const [displaySize, setDisplaySize] = useState({ width: 800, height: 500 });
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -48,32 +48,55 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
-  // Calculate responsive canvas size
+  // Calculate the CSS display size for the canvas (visual only, not physics)
   useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const container = containerRef.current;
-        const fullscreen = !!document.fullscreenElement;
-        const padding = fullscreen ? 16 : 32;
-        const headerSpace = fullscreen ? 80 : 200;
-        const maxW = fullscreen ? container.clientWidth - padding : Math.min(container.clientWidth - padding, 1000);
-        const aspectRatio = 16 / 10;
-        const width = maxW;
-        const height = Math.min(width / aspectRatio, window.innerHeight - headerSpace);
-        
-        setDimensions({ 
-          width: Math.floor(width), 
-          height: Math.floor(height) 
-        });
+    const updateDisplaySize = () => {
+      if (!containerRef.current) return;
+      
+      const container = containerRef.current;
+      const fullscreen = !!document.fullscreenElement;
+      const padding = fullscreen ? 16 : 32;
+      const headerSpace = fullscreen ? 60 : 200;
+      
+      const availableWidth = container.clientWidth - padding;
+      const availableHeight = container.clientHeight - headerSpace;
+      
+      // Maintain the game's aspect ratio (GAME_WIDTH / GAME_HEIGHT)
+      const gameAspect = GAME_WIDTH / GAME_HEIGHT;
+      
+      let width: number;
+      let height: number;
+      
+      if (availableWidth / availableHeight > gameAspect) {
+        // Height-constrained
+        height = availableHeight;
+        width = height * gameAspect;
+      } else {
+        // Width-constrained
+        width = availableWidth;
+        height = width / gameAspect;
       }
+      
+      // Cap at reasonable max in non-fullscreen
+      if (!fullscreen) {
+        width = Math.min(width, 1000);
+        height = Math.min(height, 1000 / gameAspect);
+      }
+      
+      setDisplaySize({
+        width: Math.floor(Math.max(width, 300)),
+        height: Math.floor(Math.max(height, 300 / gameAspect)),
+      });
     };
 
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    document.addEventListener('fullscreenchange', updateDimensions);
+    updateDisplaySize();
+    window.addEventListener('resize', updateDisplaySize);
+    document.addEventListener('fullscreenchange', () => {
+      // Small delay to let fullscreen dimensions settle
+      requestAnimationFrame(updateDisplaySize);
+    });
     return () => {
-      window.removeEventListener('resize', updateDimensions);
-      document.removeEventListener('fullscreenchange', updateDimensions);
+      window.removeEventListener('resize', updateDisplaySize);
     };
   }, []);
 
@@ -86,8 +109,6 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     movePaddle,
   } = useGameEngine({
     config,
-    canvasWidth: dimensions.width,
-    canvasHeight: dimensions.height,
     onGameOver: useCallback((winner: number) => {
       if (onGameOver) {
         onGameOver(winner, 0, 0);
@@ -124,7 +145,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
       style={{ backgroundColor: `hsl(${theme.background})` }}
     >
       {/* Game Header */}
-      <div className="flex items-center justify-between w-full max-w-4xl mb-4 px-2">
+      <div className="flex items-center justify-between w-full mb-4 px-2" style={{ maxWidth: displaySize.width }}>
         <Button
           variant="ghost"
           size="sm"
@@ -190,8 +211,8 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
         <GameCanvas
           ref={canvasRef}
           gameState={gameState}
-          width={dimensions.width}
-          height={dimensions.height}
+          displayWidth={displaySize.width}
+          displayHeight={displaySize.height}
           onMouseMove={!isMobile ? handleMouseMove : undefined}
           onTouchMove={handleTouchMove}
         />
@@ -254,6 +275,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
           ESC o SPAZIO per mettere in pausa
         </div>
       )}
+
       {/* Exit Confirmation Dialog */}
       <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
         <AlertDialogContent>

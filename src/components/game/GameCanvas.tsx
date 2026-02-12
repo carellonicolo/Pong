@@ -1,10 +1,10 @@
 import React, { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
-import { GameState, THEME_PRESETS, PowerUpType } from '@/types/game';
+import { GameState, THEME_PRESETS, PowerUpType, GAME_WIDTH, GAME_HEIGHT } from '@/types/game';
 
 interface GameCanvasProps {
   gameState: GameState;
-  width: number;
-  height: number;
+  displayWidth: number;
+  displayHeight: number;
   onMouseMove?: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onTouchMove?: (e: React.TouchEvent<HTMLCanvasElement>) => void;
 }
@@ -27,8 +27,8 @@ const POWER_UP_ICONS: Record<PowerUpType, string> = {
 
 export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
   gameState,
-  width,
-  height,
+  displayWidth,
+  displayHeight,
   onMouseMove,
   onTouchMove,
 }, ref) => {
@@ -45,17 +45,17 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas
+    // Clear canvas (uses fixed internal resolution)
     ctx.fillStyle = `hsl(${theme.background})`;
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     // Draw center line
     ctx.setLineDash([10, 10]);
     ctx.strokeStyle = `hsl(${theme.foreground} / 0.3)`;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(width / 2, 0);
-    ctx.lineTo(width / 2, height);
+    ctx.moveTo(GAME_WIDTH / 2, 0);
+    ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT);
     ctx.stroke();
     ctx.setLineDash([]);
 
@@ -127,25 +127,25 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     ctx.textBaseline = 'top';
     ctx.fillText(
       gameState.players[0].paddle.score.toString(),
-      width / 4,
+      GAME_WIDTH / 4,
       30
     );
     ctx.fillText(
       gameState.players[1].paddle.score.toString(),
-      (width * 3) / 4,
+      (GAME_WIDTH * 3) / 4,
       30
     );
 
     // Draw player names
     ctx.font = '14px sans-serif';
     ctx.fillStyle = `hsl(${theme.foreground} / 0.5)`;
-    ctx.fillText(gameState.players[0].nickname, width / 4, 85);
-    ctx.fillText(gameState.players[1].nickname, (width * 3) / 4, 85);
+    ctx.fillText(gameState.players[0].nickname, GAME_WIDTH / 4, 85);
+    ctx.fillText(gameState.players[1].nickname, (GAME_WIDTH * 3) / 4, 85);
 
     // Draw pause/game over overlay
     if (gameState.isPaused || gameState.isGameOver) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
       ctx.fillStyle = `hsl(${theme.foreground})`;
       ctx.font = 'bold 36px sans-serif';
@@ -155,35 +155,37 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
       if (gameState.isGameOver && gameState.winner !== null) {
         ctx.fillText(
           `${gameState.players[gameState.winner].nickname} Wins!`,
-          width / 2,
-          height / 2 - 20
+          GAME_WIDTH / 2,
+          GAME_HEIGHT / 2 - 20
         );
         ctx.font = '20px sans-serif';
-        ctx.fillText('Press SPACE to play again', width / 2, height / 2 + 30);
+        ctx.fillText('Press SPACE to play again', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
       } else if (gameState.isPaused) {
-        ctx.fillText('PAUSED', width / 2, height / 2 - 20);
+        ctx.fillText('PAUSED', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
         ctx.font = '18px sans-serif';
-        ctx.fillText('Press SPACE to start', width / 2, height / 2 + 30);
+        ctx.fillText('Press SPACE to start', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
         ctx.font = '14px sans-serif';
         ctx.fillStyle = `hsl(${theme.foreground} / 0.7)`;
-        ctx.fillText('W/S or Mouse - Player 1', width / 2, height / 2 + 70);
+        ctx.fillText('W/S or Mouse - Player 1', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 70);
         if (gameState.config.mode === 'local') {
-          ctx.fillText('↑/↓ or Touch Right - Player 2', width / 2, height / 2 + 90);
+          ctx.fillText('↑/↓ or Touch Right - Player 2', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 90);
         }
       }
     }
-  }, [gameState, width, height, theme]);
+  }, [gameState, theme]);
 
   return (
     <canvas
       ref={internalRef}
-      width={width}
-      height={height}
+      width={GAME_WIDTH}
+      height={GAME_HEIGHT}
       onMouseMove={onMouseMove}
       onTouchMove={onTouchMove}
       onTouchStart={(e) => e.preventDefault()}
       className="rounded-lg border border-border touch-none cursor-none"
       style={{
+        width: displayWidth,
+        height: displayHeight,
         boxShadow: gameState.config.theme !== 'minimal' 
           ? `0 0 30px hsl(${theme.glow || theme.accent} / 0.3)` 
           : undefined,
