@@ -141,10 +141,14 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           <BouncingBall />
         </div>
         <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h1 className="text-6xl md:text-8xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="game-title text-7xl md:text-9xl font-black mb-2 bg-gradient-to-b from-primary via-primary/80 to-accent bg-clip-text text-transparent leading-none">
             PONG
           </h1>
-          <p className="text-xl text-muted-foreground">Multiplayer Edition</p>
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <span className="h-px w-12 bg-gradient-to-r from-transparent to-primary/50" />
+            <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground font-medium">Multiplayer Edition</p>
+            <span className="h-px w-12 bg-gradient-to-l from-transparent to-primary/50" />
+          </div>
         </div>
 
         <div className="grid gap-4 w-full max-w-md animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
@@ -222,7 +226,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           <rect width="100%" height="100%" fill="url(#diag2)"/>
         </svg>
       </div>
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent relative z-10 text-center">
+      <h1 className="game-title text-5xl md:text-6xl font-black mb-4 bg-gradient-to-b from-primary via-primary/80 to-accent bg-clip-text text-transparent relative z-10 text-center leading-none">
         PONG
       </h1>
       <Card className="w-full max-w-2xl relative z-10 bg-background/95 backdrop-blur-sm">
