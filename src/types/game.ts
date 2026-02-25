@@ -59,6 +59,7 @@ export interface GameConfig {
   player2Color: string;
   player1Nickname: string;
   player2Nickname: string;
+  paddleSensitivity: number; // 0.1 (very smooth) to 1.0 (instant)
 }
 
 export interface GameState {
