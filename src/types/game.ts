@@ -70,6 +70,7 @@ export interface GameConfig {
   player1Keys: KeyBindings;
   player2Keys: KeyBindings;
   mouseEnabled: boolean;
+  particlesEnabled: boolean;
 }
 
 export interface GameState {

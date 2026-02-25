@@ -18,7 +18,8 @@ import {
   Volume2,
   Music,
   RotateCcw,
-  Keyboard
+  Keyboard,
+  Sparkles
 } from 'lucide-react';
 import { GameConfig, GameMode, GameTheme, BallSpeed, KeyBindings, THEME_PRESETS } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -87,6 +88,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
     player1Keys: mode === 'single' ? { up: 'arrowup', down: 'arrowdown' } : { up: 'w', down: 's' },
     player2Keys: { up: 'arrowup', down: 'arrowdown' },
     mouseEnabled: mode === 'single',
+    particlesEnabled: true,
   });
 
   const [config, setConfig] = useState<GameConfig>(getDefaultConfig('single'));
@@ -446,7 +448,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           </div>
 
           {/* Row 4: Toggles inline */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <div className="p-2 rounded-md border flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-yellow-500" />
@@ -455,6 +457,16 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
               <Switch
                 checked={config.powerUpsEnabled}
                 onCheckedChange={(checked) => setConfig(prev => ({ ...prev, powerUpsEnabled: checked }))}
+              />
+            </div>
+            <div className="p-2 rounded-md border flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-xs">Particelle</span>
+              </div>
+              <Switch
+                checked={config.particlesEnabled}
+                onCheckedChange={(checked) => setConfig(prev => ({ ...prev, particlesEnabled: checked }))}
               />
             </div>
             <div className="p-2 rounded-md border flex items-center justify-between">
