@@ -144,7 +144,10 @@ export const useGameControls = ({
       const gameX = screenToGameX(touch.clientX, canvas);
       const gameY = screenToGameY(touch.clientY, canvas);
 
-      if (gameX < GAME_WIDTH / 2) {
+      if (mode === 'single') {
+        // Single player: touch anywhere controls player 1
+        touchTargetY.current.set(0, gameY);
+      } else if (gameX < GAME_WIDTH / 2) {
         touchTargetY.current.set(0, gameY);
       } else if (mode === 'local') {
         touchTargetY.current.set(1, gameY);
