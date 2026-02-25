@@ -229,7 +229,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
       <h1 className="game-title text-5xl md:text-6xl font-black mb-4 bg-gradient-to-b from-primary via-primary/80 to-accent bg-clip-text text-transparent relative z-10 text-center leading-none">
         PONG
       </h1>
-      <Card className="w-full max-w-2xl relative z-10 bg-background/95 backdrop-blur-sm">
+      <Card className="w-full max-w-2xl relative z-10 bg-background/95 backdrop-blur-sm overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
