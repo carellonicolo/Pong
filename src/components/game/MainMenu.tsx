@@ -198,93 +198,93 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           <rect width="100%" height="100%" fill="url(#diag2)"/>
         </svg>
       </div>
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
+      <Card className="w-full max-w-2xl relative z-10">
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Settings className="w-4 h-4" />
                 Configura Partita
               </CardTitle>
-              <CardDescription>
-                {MODE_OPTIONS.find(m => m.value === config.mode)?.label} -{' '}
-                {MODE_OPTIONS.find(m => m.value === config.mode)?.description}
+              <CardDescription className="text-xs">
+                {MODE_OPTIONS.find(m => m.value === config.mode)?.label} — {MODE_OPTIONS.find(m => m.value === config.mode)?.description}
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={handleResetDefaults} title="Ripristina valori predefiniti">
-                <RotateCcw className="w-4 h-4 mr-1" />
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={handleResetDefaults} title="Ripristina valori predefiniti">
+                <RotateCcw className="w-3 h-3 mr-1" />
                 Default
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowConfig(false)}>
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => setShowConfig(false)}>
                 ← Indietro
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Theme Selection */}
-          <div className="space-y-3">
-            <Label className="flex items-center gap-2">
-              <Palette className="w-4 h-4" />
-              Tema Visivo
-            </Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {THEME_OPTIONS.map((theme) => (
-                <button
-                  key={theme.value}
-                  onClick={() => handleThemeChange(theme.value)}
-                  className={cn(
-                    "p-3 rounded-lg border-2 text-left transition-all hover:scale-[1.02]",
-                    config.theme === theme.value
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50"
-                  )}
-                >
-                  <div className="text-2xl mb-1">{theme.icon}</div>
-                  <div className="text-sm font-medium">{theme.label}</div>
-                  <div className="text-xs text-muted-foreground">{theme.description}</div>
-                </button>
-              ))}
+        <CardContent className="space-y-3 pt-0">
+          {/* Row 1: Theme + Names */}
+          <div className="grid md:grid-cols-2 gap-3">
+            {/* Theme */}
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5 text-xs">
+                <Palette className="w-3 h-3" />
+                Tema
+              </Label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {THEME_OPTIONS.map((theme) => (
+                  <button
+                    key={theme.value}
+                    onClick={() => handleThemeChange(theme.value)}
+                    className={cn(
+                      "p-2 rounded-md border-2 text-left transition-all hover:scale-[1.02]",
+                      config.theme === theme.value
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base">{theme.icon}</span>
+                      <span className="text-xs font-medium">{theme.label}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Player Names */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="player1">Giocatore 1</Label>
+            {/* Names */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Nomi</Label>
               <Input
-                id="player1"
                 value={config.player1Nickname}
                 onChange={(e) => setConfig(prev => ({ ...prev, player1Nickname: e.target.value }))}
                 maxLength={15}
+                placeholder="Giocatore 1"
+                className="h-8 text-sm"
               />
-            </div>
-            {config.mode !== 'single' && (
-              <div className="space-y-2">
-                <Label htmlFor="player2">Giocatore 2</Label>
+              {config.mode !== 'single' && (
                 <Input
-                  id="player2"
                   value={config.player2Nickname}
                   onChange={(e) => setConfig(prev => ({ ...prev, player2Nickname: e.target.value }))}
                   maxLength={15}
+                  placeholder="Giocatore 2"
+                  className="h-8 text-sm"
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Paddle Colors */}
+          {/* Paddle Colors (custom theme only) */}
           {config.theme === 'custom' && (
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Colore Racchetta 1</Label>
-                <div className="flex gap-2 flex-wrap">
+            <div className="grid md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Colore Racchetta 1</Label>
+                <div className="flex gap-1.5 flex-wrap">
                   {COLOR_PRESETS.map((color) => (
                     <button
                       key={color}
                       onClick={() => setConfig(prev => ({ ...prev, player1Color: color }))}
                       className={cn(
-                        "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
+                        "w-6 h-6 rounded-full border-2 transition-transform hover:scale-110",
                         config.player1Color === color ? "border-foreground scale-110" : "border-muted"
                       )}
                       style={{ backgroundColor: `hsl(${color})` }}
@@ -292,15 +292,15 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Colore Racchetta 2</Label>
-                <div className="flex gap-2 flex-wrap">
+              <div className="space-y-1">
+                <Label className="text-xs">Colore Racchetta 2</Label>
+                <div className="flex gap-1.5 flex-wrap">
                   {COLOR_PRESETS.map((color) => (
                     <button
                       key={color}
                       onClick={() => setConfig(prev => ({ ...prev, player2Color: color }))}
                       className={cn(
-                        "w-8 h-8 rounded-full border-2 transition-transform hover:scale-110",
+                        "w-6 h-6 rounded-full border-2 transition-transform hover:scale-110",
                         config.player2Color === color ? "border-foreground scale-110" : "border-muted"
                       )}
                       style={{ backgroundColor: `hsl(${color})` }}
@@ -311,174 +311,143 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
             </div>
           )}
 
-          {/* Win Score */}
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <Label>Punteggio per vincere</Label>
-              <span className="text-sm font-medium">{config.winScore}</span>
+          {/* Row 2: Score + Speed + Sensitivity */}
+          <div className="grid md:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <div className="flex justify-between">
+                <Label className="text-xs">Punteggio vittoria</Label>
+                <span className="text-xs font-medium">{config.winScore}</span>
+              </div>
+              <Slider
+                value={[config.winScore]}
+                onValueChange={([value]) => setConfig(prev => ({ ...prev, winScore: value }))}
+                min={3}
+                max={21}
+                step={1}
+              />
             </div>
-            <Slider
-              value={[config.winScore]}
-              onValueChange={([value]) => setConfig(prev => ({ ...prev, winScore: value }))}
-              min={3}
-              max={21}
-              step={1}
-            />
+            <div className="space-y-1.5">
+              <Label className="text-xs">Velocità Palla</Label>
+              <div className="flex gap-1">
+                {SPEED_OPTIONS.map((speed) => (
+                  <Button
+                    key={speed.value}
+                    variant={config.ballSpeed === speed.value ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 text-xs px-2 flex-1"
+                    onClick={() => setConfig(prev => ({ ...prev, ballSpeed: speed.value }))}
+                  >
+                    {speed.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between">
+                <Label className="text-xs">Sensibilità</Label>
+                <span className="text-xs font-medium">
+                  {config.paddleSensitivity <= 0.3 ? 'Liscia' : config.paddleSensitivity <= 0.6 ? 'Normale' : 'Reattiva'}
+                </span>
+              </div>
+              <Slider
+                value={[config.paddleSensitivity]}
+                onValueChange={([value]) => setConfig(prev => ({ ...prev, paddleSensitivity: value }))}
+                min={0.1}
+                max={1.0}
+                step={0.1}
+              />
+            </div>
           </div>
 
-          {/* Ball Speed */}
-          <div className="space-y-3">
-            <Label>Velocità Palla</Label>
-            <div className="flex gap-2">
-              {SPEED_OPTIONS.map((speed) => (
-                <Button
-                  key={speed.value}
-                  variant={config.ballSpeed === speed.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setConfig(prev => ({ ...prev, ballSpeed: speed.value }))}
-                >
-                  {speed.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Paddle Sensitivity */}
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <Label>Sensibilità Racchetta</Label>
-              <span className="text-sm font-medium">
-                {config.paddleSensitivity <= 0.2 ? 'Molto liscia' : config.paddleSensitivity <= 0.4 ? 'Liscia' : config.paddleSensitivity <= 0.6 ? 'Normale' : config.paddleSensitivity <= 0.8 ? 'Reattiva' : 'Istantanea'}
-              </span>
-            </div>
-            <Slider
-              value={[config.paddleSensitivity]}
-              onValueChange={([value]) => setConfig(prev => ({ ...prev, paddleSensitivity: value }))}
-              min={0.1}
-              max={1.0}
-              step={0.1}
-            />
-            <p className="text-xs text-muted-foreground">
-              Più bassa = movimento più fluido e controllato
-            </p>
-          </div>
-
-          {/* Controls Configuration */}
-          <div className="space-y-3">
-            <Label className="flex items-center gap-2">
-              <Keyboard className="w-4 h-4" />
+          {/* Row 3: Controls */}
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5 text-xs">
+              <Keyboard className="w-3 h-3" />
               Controlli
             </Label>
-            
-            {config.mode === 'single' && (
-              <div className="flex items-center justify-between p-3 rounded-lg border">
-                <div>
-                  <Label htmlFor="mouse" className="cursor-pointer text-sm">Controllo mouse</Label>
-                  <p className="text-xs text-muted-foreground">Muovi la racchetta col mouse</p>
-                </div>
-                <Switch
-                  id="mouse"
-                  checked={config.mouseEnabled}
-                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, mouseEnabled: checked }))}
-                />
-              </div>
-            )}
-
-            <div className="p-3 rounded-lg border space-y-2">
-              <Label className="text-sm">{config.mode === 'single' ? 'Tasti movimento' : 'Giocatore 1'}</Label>
-              <div className="flex items-center gap-3">
+            <div className="grid md:grid-cols-2 gap-2">
+              <div className="p-2 rounded-md border flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{config.mode === 'single' ? 'Tasti' : 'P1'}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Su:</span>
-                  <KeyBindButton
-                    currentKey={config.player1Keys.up}
-                    onKeyChange={(key) => setConfig(prev => ({ ...prev, player1Keys: { ...prev.player1Keys, up: key } }))}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Giù:</span>
-                  <KeyBindButton
-                    currentKey={config.player1Keys.down}
-                    onKeyChange={(key) => setConfig(prev => ({ ...prev, player1Keys: { ...prev.player1Keys, down: key } }))}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {config.mode === 'local' && (
-              <div className="p-3 rounded-lg border space-y-2">
-                <Label className="text-sm">Giocatore 2</Label>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Su:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">↑</span>
                     <KeyBindButton
-                      currentKey={config.player2Keys.up}
-                      onKeyChange={(key) => setConfig(prev => ({ ...prev, player2Keys: { ...prev.player2Keys, up: key } }))}
+                      currentKey={config.player1Keys.up}
+                      onKeyChange={(key) => setConfig(prev => ({ ...prev, player1Keys: { ...prev.player1Keys, up: key } }))}
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Giù:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">↓</span>
                     <KeyBindButton
-                      currentKey={config.player2Keys.down}
-                      onKeyChange={(key) => setConfig(prev => ({ ...prev, player2Keys: { ...prev.player2Keys, down: key } }))}
+                      currentKey={config.player1Keys.down}
+                      onKeyChange={(key) => setConfig(prev => ({ ...prev, player1Keys: { ...prev.player1Keys, down: key } }))}
                     />
                   </div>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Power-ups Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-lg border">
-            <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5 text-yellow-500" />
-              <div>
-                <Label htmlFor="powerups" className="cursor-pointer">Power-ups</Label>
-                <p className="text-sm text-muted-foreground">
-                  Oggetti speciali durante la partita
-                </p>
-              </div>
-            </div>
-            <Switch
-              id="powerups"
-              checked={config.powerUpsEnabled}
-              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, powerUpsEnabled: checked }))}
-            />
-          </div>
-
-          {/* Audio Settings */}
-          <div className="space-y-3">
-            <Label className="flex items-center gap-2">
-              <Volume2 className="w-4 h-4" />
-              Audio
-            </Label>
-            <div className="flex items-center justify-between p-4 rounded-lg border">
-              <div className="flex items-center gap-3">
-                <Volume2 className="w-5 h-5 text-blue-500" />
-                <div>
-                  <Label htmlFor="sound" className="cursor-pointer">Effetti sonori</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Colpi, punti e power-ups
-                  </p>
+              {config.mode === 'local' ? (
+                <div className="p-2 rounded-md border flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">P2</span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-muted-foreground">↑</span>
+                      <KeyBindButton
+                        currentKey={config.player2Keys.up}
+                        onKeyChange={(key) => setConfig(prev => ({ ...prev, player2Keys: { ...prev.player2Keys, up: key } }))}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-muted-foreground">↓</span>
+                      <KeyBindButton
+                        currentKey={config.player2Keys.down}
+                        onKeyChange={(key) => setConfig(prev => ({ ...prev, player2Keys: { ...prev.player2Keys, down: key } }))}
+                      />
+                    </div>
+                  </div>
                 </div>
+              ) : config.mode === 'single' ? (
+                <div className="p-2 rounded-md border flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">Mouse</span>
+                  </div>
+                  <Switch
+                    checked={config.mouseEnabled}
+                    onCheckedChange={(checked) => setConfig(prev => ({ ...prev, mouseEnabled: checked }))}
+                  />
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Row 4: Toggles inline */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-2 rounded-md border flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-yellow-500" />
+                <span className="text-xs">Power-ups</span>
               </div>
               <Switch
-                id="sound"
+                checked={config.powerUpsEnabled}
+                onCheckedChange={(checked) => setConfig(prev => ({ ...prev, powerUpsEnabled: checked }))}
+              />
+            </div>
+            <div className="p-2 rounded-md border flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Volume2 className="w-3.5 h-3.5 text-blue-500" />
+                <span className="text-xs">Effetti</span>
+              </div>
+              <Switch
                 checked={config.soundEnabled}
                 onCheckedChange={(checked) => setConfig(prev => ({ ...prev, soundEnabled: checked }))}
               />
             </div>
-            <div className="flex items-center justify-between p-4 rounded-lg border">
-              <div className="flex items-center gap-3">
-                <Music className="w-5 h-5 text-purple-500" />
-                <div>
-                  <Label htmlFor="music" className="cursor-pointer">Musica di sottofondo</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Melodia retro durante la partita
-                  </p>
-                </div>
+            <div className="p-2 rounded-md border flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Music className="w-3.5 h-3.5 text-purple-500" />
+                <span className="text-xs">Musica</span>
               </div>
               <Switch
-                id="music"
                 checked={config.musicEnabled}
                 onCheckedChange={(checked) => setConfig(prev => ({ ...prev, musicEnabled: checked }))}
               />
@@ -488,10 +457,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           {/* Start Button */}
           <Button
             size="lg"
-            className="w-full h-14 text-lg gap-2"
+            className="w-full h-11 text-base gap-2"
             onClick={handleStartGame}
           >
-            <Play className="w-5 h-5" />
+            <Play className="w-4 h-4" />
             {config.mode === 'online' ? 'Cerca Partita' : 'Inizia Partita'}
           </Button>
         </CardContent>
