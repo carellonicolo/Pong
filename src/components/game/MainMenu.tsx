@@ -144,7 +144,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
               key={option.value}
               variant="outline"
               size="lg"
-              className="h-20 justify-start gap-4 text-left hover:scale-[1.02] transition-transform"
+              className="h-20 justify-start gap-4 text-left hover:scale-[1.02] transition-transform bg-background/90 backdrop-blur-sm"
               onClick={() => {
                 setConfig(getDefaultConfig(option.value));
                 setShowConfig(true);
@@ -200,7 +200,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           <rect width="100%" height="100%" fill="url(#diag2)"/>
         </svg>
       </div>
-      <Card className="w-full max-w-2xl relative z-10">
+      <Card className="w-full max-w-2xl relative z-10 bg-background/95 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
