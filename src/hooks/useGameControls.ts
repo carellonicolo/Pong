@@ -128,12 +128,12 @@ export const useGameControls = ({
     return () => cancelAnimationFrame(animId);
   }, [movePaddle, sensitivity, mouseEnabled]);
 
-  // Mouse controls - only stores target if mouse is enabled
+  // Mouse controls - only stores target if mouse is enabled and game is active
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!mouseEnabled) return;
+    if (!mouseEnabled || isPaused) return;
     const canvas = e.currentTarget;
     mouseTargetY.current = screenToGameY(e.clientY, canvas);
-  }, [mouseEnabled]);
+  }, [mouseEnabled, isPaused]);
 
   // Touch controls
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
