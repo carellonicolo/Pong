@@ -106,7 +106,29 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
 
   if (!showConfig) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background relative overflow-hidden">
+        {/* Abstract background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[10%] left-[5%] w-64 h-64 rounded-full bg-primary/5 blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
+          <div className="absolute bottom-[15%] right-[10%] w-80 h-80 rounded-full bg-accent/5 blur-3xl animate-pulse" style={{ animationDuration: '8s', animationDelay: '2s' }} />
+          <div className="absolute top-[40%] right-[25%] w-48 h-48 rounded-full bg-primary/3 blur-2xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '4s' }} />
+          <div className="absolute bottom-[40%] left-[20%] w-56 h-56 rounded-full bg-accent/3 blur-2xl animate-pulse" style={{ animationDuration: '7s', animationDelay: '1s' }} />
+          <div 
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
+              backgroundSize: '60px 60px',
+            }}
+          />
+          <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="diag" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="40" stroke="hsl(var(--foreground))" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#diag)"/>
+          </svg>
+        </div>
         <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h1 className="text-6xl md:text-8xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             PONG
@@ -153,7 +175,29 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background relative overflow-hidden">
+      {/* Abstract background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[10%] left-[5%] w-64 h-64 rounded-full bg-primary/5 blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="absolute bottom-[15%] right-[10%] w-80 h-80 rounded-full bg-accent/5 blur-3xl animate-pulse" style={{ animationDuration: '8s', animationDelay: '2s' }} />
+        <div className="absolute top-[40%] right-[25%] w-48 h-48 rounded-full bg-primary/3 blur-2xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '4s' }} />
+        <div className="absolute bottom-[40%] left-[20%] w-56 h-56 rounded-full bg-accent/3 blur-2xl animate-pulse" style={{ animationDuration: '7s', animationDelay: '1s' }} />
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+          }}
+        />
+        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="diag2" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="40" stroke="hsl(var(--foreground))" strokeWidth="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#diag2)"/>
+        </svg>
+      </div>
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <div className="flex items-center justify-between">
