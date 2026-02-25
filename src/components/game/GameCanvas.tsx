@@ -89,7 +89,7 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     });
 
     // Ball trail + particles
-    if (!gameState.isPaused && !gameState.isGameOver) {
+    if (!gameState.isPaused && !gameState.isGameOver && gameState.config.particlesEnabled) {
       gameState.balls.forEach((ball) => {
         emitTrail(ball.x, ball.y, theme.ball);
       });
