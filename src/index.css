@@ -94,6 +94,26 @@ All colors MUST be HSL.
   }
 }
 
+@layer components {
+  .game-title {
+    font-family: 'Arial Black', 'Impact', sans-serif;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    -webkit-text-stroke: 1px hsl(var(--primary) / 0.3);
+    filter: drop-shadow(0 0 20px hsl(var(--primary) / 0.4)) drop-shadow(0 0 60px hsl(var(--primary) / 0.15));
+    animation: title-glow 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes title-glow {
+    from {
+      filter: drop-shadow(0 0 20px hsl(var(--primary) / 0.4)) drop-shadow(0 0 60px hsl(var(--primary) / 0.15));
+    }
+    to {
+      filter: drop-shadow(0 0 30px hsl(var(--primary) / 0.6)) drop-shadow(0 0 80px hsl(var(--primary) / 0.25));
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
