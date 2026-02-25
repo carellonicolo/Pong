@@ -250,15 +250,15 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
-          {/* Row 1: Theme + Names */}
+          {/* Main grid: Themes left, Settings right */}
           <div className="grid md:grid-cols-2 gap-3">
-            {/* Theme */}
+            {/* Left: Theme */}
             <div className="space-y-1.5">
               <Label className="flex items-center gap-1.5 text-xs">
                 <Palette className="w-3 h-3" />
                 Tema
               </Label>
-              <div className="grid grid-cols-3 gap-1 max-h-[180px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-1 max-h-[320px] overflow-y-auto pr-1">
                 {THEME_OPTIONS.map((theme) => (
                   <button
                     key={theme.value}
@@ -279,24 +279,89 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
               </div>
             </div>
 
-            {/* Names */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Nomi</Label>
-              <Input
-                value={config.player1Nickname}
-                onChange={(e) => setConfig(prev => ({ ...prev, player1Nickname: e.target.value }))}
-                maxLength={15}
-                placeholder="Giocatore 1"
-                className="h-8 text-sm"
-              />
-              {config.mode !== 'single' && (
+            {/* Right: Names + Sliders stacked */}
+            <div className="space-y-3">
+              {/* Names */}
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nomi</Label>
                 <Input
-                  value={config.player2Nickname}
-                  onChange={(e) => setConfig(prev => ({ ...prev, player2Nickname: e.target.value }))}
+                  value={config.player1Nickname}
+                  onChange={(e) => setConfig(prev => ({ ...prev, player1Nickname: e.target.value }))}
                   maxLength={15}
-                  placeholder="Giocatore 2"
+                  placeholder="Giocatore 1"
                   className="h-8 text-sm"
                 />
+                {config.mode !== 'single' && (
+                  <Input
+                    value={config.player2Nickname}
+                    onChange={(e) => setConfig(prev => ({ ...prev, player2Nickname: e.target.value }))}
+                    maxLength={15}
+                    placeholder="Giocatore 2"
+                    className="h-8 text-sm"
+                  />
+                )}
+              </div>
+
+              {/* Sliders stacked */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <Label className="text-xs">Punteggio vittoria</Label>
+                  <span className="text-xs font-medium">{config.winScore}</span>
+                </div>
+                <Slider
+                  value={[config.winScore]}
+                  onValueChange={([value]) => setConfig(prev => ({ ...prev, winScore: value }))}
+                  min={3}
+                  max={21}
+                  step={1}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <Label className="text-xs">Velocità Palla</Label>
+                  <span className="text-xs font-medium">
+                    {config.ballSpeed <= 3 ? 'Lenta' : config.ballSpeed <= 6 ? 'Normale' : config.ballSpeed <= 8 ? 'Veloce' : 'Turbo'}
+                  </span>
+                </div>
+                <Slider
+                  value={[config.ballSpeed]}
+                  onValueChange={([value]) => setConfig(prev => ({ ...prev, ballSpeed: value }))}
+                  min={1}
+                  max={10}
+                  step={1}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <Label className="text-xs">Sensibilità</Label>
+                  <span className="text-xs font-medium">
+                    {config.paddleSensitivity <= 0.3 ? 'Liscia' : config.paddleSensitivity <= 0.6 ? 'Normale' : 'Reattiva'}
+                  </span>
+                </div>
+                <Slider
+                  value={[config.paddleSensitivity]}
+                  onValueChange={([value]) => setConfig(prev => ({ ...prev, paddleSensitivity: value }))}
+                  min={0.1}
+                  max={1.0}
+                  step={0.1}
+                />
+              </div>
+              {config.mode === 'single' && (
+                <div className="space-y-1.5">
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Difficoltà CPU</Label>
+                    <span className="text-xs font-medium">
+                      {config.aiDifficulty <= 0.2 ? 'Facile' : config.aiDifficulty <= 0.5 ? 'Media' : config.aiDifficulty <= 0.8 ? 'Difficile' : 'Esperto'}
+                    </span>
+                  </div>
+                  <Slider
+                    value={[config.aiDifficulty]}
+                    onValueChange={([value]) => setConfig(prev => ({ ...prev, aiDifficulty: value }))}
+                    min={0.1}
+                    max={1.0}
+                    step={0.1}
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -338,70 +403,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
               </div>
             </div>
           )}
-
-          {/* Row 2: Score + Speed + Sensitivity + AI */}
-          <div className={cn("grid gap-3", config.mode === 'single' ? "md:grid-cols-4" : "md:grid-cols-3")}>
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <Label className="text-xs">Punteggio vittoria</Label>
-                <span className="text-xs font-medium">{config.winScore}</span>
-              </div>
-              <Slider
-                value={[config.winScore]}
-                onValueChange={([value]) => setConfig(prev => ({ ...prev, winScore: value }))}
-                min={3}
-                max={21}
-                step={1}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <Label className="text-xs">Velocità Palla</Label>
-                <span className="text-xs font-medium">
-                  {config.ballSpeed <= 3 ? 'Lenta' : config.ballSpeed <= 6 ? 'Normale' : config.ballSpeed <= 8 ? 'Veloce' : 'Turbo'}
-                </span>
-              </div>
-              <Slider
-                value={[config.ballSpeed]}
-                onValueChange={([value]) => setConfig(prev => ({ ...prev, ballSpeed: value }))}
-                min={1}
-                max={10}
-                step={1}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <Label className="text-xs">Sensibilità</Label>
-                <span className="text-xs font-medium">
-                  {config.paddleSensitivity <= 0.3 ? 'Liscia' : config.paddleSensitivity <= 0.6 ? 'Normale' : 'Reattiva'}
-                </span>
-              </div>
-              <Slider
-                value={[config.paddleSensitivity]}
-                onValueChange={([value]) => setConfig(prev => ({ ...prev, paddleSensitivity: value }))}
-                min={0.1}
-                max={1.0}
-                step={0.1}
-              />
-            </div>
-            {config.mode === 'single' && (
-              <div className="space-y-1.5">
-                <div className="flex justify-between">
-                  <Label className="text-xs">Difficoltà CPU</Label>
-                  <span className="text-xs font-medium">
-                    {config.aiDifficulty <= 0.2 ? 'Facile' : config.aiDifficulty <= 0.5 ? 'Media' : config.aiDifficulty <= 0.8 ? 'Difficile' : 'Esperto'}
-                  </span>
-                </div>
-                <Slider
-                  value={[config.aiDifficulty]}
-                  onValueChange={([value]) => setConfig(prev => ({ ...prev, aiDifficulty: value }))}
-                  min={0.1}
-                  max={1.0}
-                  step={0.1}
-                />
-              </div>
-            )}
-          </div>
 
           {/* Row 3: Controls */}
           <div className="space-y-1.5">
