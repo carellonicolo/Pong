@@ -60,6 +60,8 @@ export interface GameConfig {
   player1Nickname: string;
   player2Nickname: string;
   paddleSensitivity: number; // 0.1 (very smooth) to 1.0 (instant)
+  soundEnabled: boolean;
+  musicEnabled: boolean;
 }
 
 export interface GameState {
