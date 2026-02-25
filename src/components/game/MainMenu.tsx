@@ -31,7 +31,8 @@ interface MainMenuProps {
 
 const THEME_OPTIONS: { value: GameTheme; label: string; icon: string; description: string }[] = [
   { value: 'retro', label: 'Retro Arcade', icon: '🕹️', description: 'Neon glow, pixel vibes' },
-  { value: 'minimal', label: 'Minimal', icon: '⚪', description: 'Clean black & white' },
+  { value: 'minimal', label: 'Minimal', icon: '⚪', description: 'Chiaro, bianco e nero' },
+  { value: 'minimal-dark', label: 'Minimal Dark', icon: '⚫', description: 'Scuro, bianco e nero' },
   { value: 'futuristic', label: 'Futuristico', icon: '🚀', description: 'Glow & particelle' },
   { value: 'custom', label: 'Personalizzato', icon: '🌈', description: 'Scegli i tuoi colori' },
 ];
