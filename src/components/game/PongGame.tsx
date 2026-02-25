@@ -195,10 +195,22 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
             variant="ghost"
             size="icon"
             onClick={() => setMusicEnabled(!musicEnabled)}
-            style={{ color: `hsl(${theme.foreground})`, opacity: musicEnabled ? 1 : 0.4 }}
+            style={{ color: `hsl(${theme.foreground})` }}
             title={musicEnabled ? 'Disattiva musica' : 'Attiva musica'}
           >
-            <Music className="w-4 h-4" />
+            <div className="relative">
+              <Music className="w-4 h-4" />
+              {!musicEnabled && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <div 
+                    className="w-[120%] h-[2px] -rotate-45"
+                    style={{ backgroundColor: `hsl(${theme.foreground})` }}
+                  />
+                </div>
+              )}
+            </div>
           </Button>
 
           <Button
