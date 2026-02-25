@@ -65,6 +65,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
     player2Color: THEME_PRESETS.retro.paddle2,
     player1Nickname: 'Player 1',
     player2Nickname: 'Player 2',
+    paddleSensitivity: 0.5,
   });
 
   const handleThemeChange = (theme: GameTheme) => {
@@ -274,6 +275,26 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                 </Button>
               ))}
             </div>
+          </div>
+
+          {/* Paddle Sensitivity */}
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <Label>Sensibilità Racchetta</Label>
+              <span className="text-sm font-medium">
+                {config.paddleSensitivity <= 0.2 ? 'Molto liscia' : config.paddleSensitivity <= 0.4 ? 'Liscia' : config.paddleSensitivity <= 0.6 ? 'Normale' : config.paddleSensitivity <= 0.8 ? 'Reattiva' : 'Istantanea'}
+              </span>
+            </div>
+            <Slider
+              value={[config.paddleSensitivity]}
+              onValueChange={([value]) => setConfig(prev => ({ ...prev, paddleSensitivity: value }))}
+              min={0.1}
+              max={1.0}
+              step={0.1}
+            />
+            <p className="text-xs text-muted-foreground">
+              Più bassa = movimento più fluido e controllato
+            </p>
           </div>
 
           {/* Power-ups Toggle */}

@@ -7,6 +7,7 @@ interface UseGameControlsProps {
   movePaddle: (playerIndex: number, y: number) => void;
   togglePause: () => void;
   isPaused: boolean;
+  sensitivity: number; // 0.1 to 1.0
 }
 
 /**
@@ -33,9 +34,15 @@ export const useGameControls = ({
   movePaddle,
   togglePause,
   isPaused,
+  sensitivity,
 }: UseGameControlsProps) => {
   const keysPressed = useRef<Set<string>>(new Set());
   const paddleSpeed = 12;
+  // Track target and current positions for interpolation
+  const mouseTargetY = useRef<number | null>(null);
+  const currentMouseY = useRef<number | null>(null);
+  const touchTargetY = useRef<Map<number, number>>(new Map()); // playerIndex -> targetY
+  const currentTouchY = useRef<Map<number, number>>(new Map());
 
   // Keyboard controls
   useEffect(() => {
@@ -105,14 +112,36 @@ export const useGameControls = ({
     return () => cancelAnimationFrame(animationId);
   }, [mode, canvasRef, movePaddle]);
 
-  // Mouse controls for player 1 - converts screen coords to game coords
+  // Interpolation loop for smooth paddle movement
+  useEffect(() => {
+    let animId: number;
+    const lerp = () => {
+      // Mouse (player 1)
+      if (mouseTargetY.current !== null) {
+        if (currentMouseY.current === null) currentMouseY.current = mouseTargetY.current;
+        currentMouseY.current += (mouseTargetY.current - currentMouseY.current) * sensitivity;
+        movePaddle(0, currentMouseY.current);
+      }
+      // Touch
+      touchTargetY.current.forEach((target, playerIndex) => {
+        const current = currentTouchY.current.get(playerIndex) ?? target;
+        const next = current + (target - current) * sensitivity;
+        currentTouchY.current.set(playerIndex, next);
+        movePaddle(playerIndex, next);
+      });
+      animId = requestAnimationFrame(lerp);
+    };
+    animId = requestAnimationFrame(lerp);
+    return () => cancelAnimationFrame(animId);
+  }, [movePaddle, sensitivity]);
+
+  // Mouse controls for player 1 - stores target, lerp loop moves paddle
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = e.currentTarget;
-    const gameY = screenToGameY(e.clientY, canvas);
-    movePaddle(0, gameY);
-  }, [movePaddle]);
+    mouseTargetY.current = screenToGameY(e.clientY, canvas);
+  }, []);
 
-  // Touch controls - converts screen coords to game coords
+  // Touch controls - stores targets, lerp loop moves paddles
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const canvas = e.currentTarget;
@@ -121,14 +150,13 @@ export const useGameControls = ({
       const gameX = screenToGameX(touch.clientX, canvas);
       const gameY = screenToGameY(touch.clientY, canvas);
 
-      // Left side = Player 1, Right side = Player 2 (for local multiplayer)
       if (gameX < GAME_WIDTH / 2) {
-        movePaddle(0, gameY);
+        touchTargetY.current.set(0, gameY);
       } else if (mode === 'local') {
-        movePaddle(1, gameY);
+        touchTargetY.current.set(1, gameY);
       }
     });
-  }, [movePaddle, mode]);
+  }, [mode]);
 
   return {
     handleMouseMove,

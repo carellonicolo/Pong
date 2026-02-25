@@ -131,6 +131,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     movePaddle,
     togglePause,
     isPaused: gameState.isPaused,
+    sensitivity: config.paddleSensitivity,
   });
 
   // Handle keyboard restart after game over
