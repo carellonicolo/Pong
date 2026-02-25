@@ -55,13 +55,18 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     const updateDisplaySize = () => {
       if (!containerRef.current) return;
       
-      const container = containerRef.current;
       const fullscreen = !!document.fullscreenElement;
-      const padding = fullscreen ? 16 : 32;
-      const headerSpace = fullscreen ? 60 : 200;
       
-      const availableWidth = container.clientWidth - padding;
-      const availableHeight = container.clientHeight - headerSpace;
+      // Use window dimensions in fullscreen for reliability
+      const containerWidth = fullscreen ? window.innerWidth : containerRef.current.clientWidth;
+      const containerHeight = fullscreen ? window.innerHeight : containerRef.current.clientHeight;
+      
+      const padding = fullscreen ? 32 : 32;
+      // Reserve space for header + footer elements (power-ups legend, controls hint, game-over buttons)
+      const reservedVertical = fullscreen ? 100 : 200;
+      
+      const availableWidth = containerWidth - padding;
+      const availableHeight = containerHeight - reservedVertical;
       
       // Maintain the game's aspect ratio (GAME_WIDTH / GAME_HEIGHT)
       const gameAspect = GAME_WIDTH / GAME_HEIGHT;
@@ -70,11 +75,9 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
       let height: number;
       
       if (availableWidth / availableHeight > gameAspect) {
-        // Height-constrained
         height = availableHeight;
         width = height * gameAspect;
       } else {
-        // Width-constrained
         width = availableWidth;
         height = width / gameAspect;
       }
@@ -93,12 +96,11 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
 
     updateDisplaySize();
     window.addEventListener('resize', updateDisplaySize);
-    document.addEventListener('fullscreenchange', () => {
-      // Small delay to let fullscreen dimensions settle
-      requestAnimationFrame(updateDisplaySize);
-    });
+    const onFsUpdate = () => requestAnimationFrame(updateDisplaySize);
+    document.addEventListener('fullscreenchange', onFsUpdate);
     return () => {
       window.removeEventListener('resize', updateDisplaySize);
+      document.removeEventListener('fullscreenchange', onFsUpdate);
     };
   }, []);
 
@@ -151,7 +153,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   return (
     <div 
       ref={containerRef}
-      className="flex flex-col items-center justify-center min-h-screen p-4"
+      className={`flex flex-col items-center justify-center p-4 ${isFullscreen ? 'h-screen overflow-hidden' : 'min-h-screen'}`}
       style={{ backgroundColor: `hsl(${theme.background})` }}
     >
       {/* Game Header */}
