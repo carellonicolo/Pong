@@ -268,7 +268,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                     key={theme.value}
                     onClick={() => handleThemeChange(theme.value)}
                     className={cn(
-                      "p-1.5 rounded-md border-2 text-left transition-all hover:scale-[1.02]",
+                      "p-1.5 rounded-md border-2 text-left transition-colors",
                       config.theme === theme.value
                         ? "border-primary bg-primary/10"
                         : "border-border hover:border-primary/50"
