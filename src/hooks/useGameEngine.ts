@@ -230,6 +230,11 @@ export const useGameEngine = ({
   const updateAI = useCallback((player: Player, balls: Ball[]): number => {
     if (!player.isAI || balls.length === 0) return player.paddle.y;
 
+    const difficulty = config.aiDifficulty; // 0.1 to 1.0
+    const aiSpeed = 2 + difficulty * 6; // 2.6 (easy) to 8 (hard)
+    const reactionThreshold = 40 - difficulty * 35; // 35.5 (easy, lazy) to 5 (hard, precise)
+    const errorMargin = (1 - difficulty) * 60; // 54 (easy, inaccurate) to 0 (hard, perfect)
+
     const relevantBall = balls.reduce((closest, ball) => {
       if (ball.vx > 0 && (!closest || ball.x > closest.x)) return ball;
       return closest;
@@ -237,13 +242,17 @@ export const useGameEngine = ({
 
     if (!relevantBall) return player.paddle.y;
 
-    const targetY = relevantBall.y - player.paddle.height / 2;
+    // Add random error to target position based on difficulty
+    const error = (Math.sin(Date.now() / 500) * errorMargin);
+    const targetY = relevantBall.y - player.paddle.height / 2 + error;
     const diff = targetY - player.paddle.y;
-    const aiSpeed = 5;
+
+    // Don't react to small movements (lower difficulty = lazier)
+    if (Math.abs(diff) < reactionThreshold) return player.paddle.y;
 
     if (Math.abs(diff) < aiSpeed) return targetY;
     return player.paddle.y + (diff > 0 ? aiSpeed : -aiSpeed);
-  }, []);
+  }, [config.aiDifficulty]);
 
   const gameLoop = useCallback(() => {
     setGameState(prev => {

@@ -71,6 +71,7 @@ export interface GameConfig {
   player2Keys: KeyBindings;
   mouseEnabled: boolean;
   particlesEnabled: boolean;
+  aiDifficulty: number; // 0.1 (easy) to 1.0 (hard)
 }
 
 export interface GameState {

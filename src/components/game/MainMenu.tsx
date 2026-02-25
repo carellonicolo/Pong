@@ -89,6 +89,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
     player2Keys: { up: 'arrowup', down: 'arrowdown' },
     mouseEnabled: mode === 'single',
     particlesEnabled: true,
+    aiDifficulty: 0.5,
   });
 
   const [config, setConfig] = useState<GameConfig>(getDefaultConfig('single'));
@@ -338,8 +339,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
             </div>
           )}
 
-          {/* Row 2: Score + Speed + Sensitivity */}
-          <div className="grid md:grid-cols-3 gap-3">
+          {/* Row 2: Score + Speed + Sensitivity + AI */}
+          <div className={cn("grid gap-3", config.mode === 'single' ? "md:grid-cols-4" : "md:grid-cols-3")}>
             <div className="space-y-1.5">
               <div className="flex justify-between">
                 <Label className="text-xs">Punteggio vittoria</Label>
@@ -384,6 +385,23 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                 step={0.1}
               />
             </div>
+            {config.mode === 'single' && (
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <Label className="text-xs">Difficoltà CPU</Label>
+                  <span className="text-xs font-medium">
+                    {config.aiDifficulty <= 0.2 ? 'Facile' : config.aiDifficulty <= 0.5 ? 'Media' : config.aiDifficulty <= 0.8 ? 'Difficile' : 'Esperto'}
+                  </span>
+                </div>
+                <Slider
+                  value={[config.aiDifficulty]}
+                  onValueChange={([value]) => setConfig(prev => ({ ...prev, aiDifficulty: value }))}
+                  min={0.1}
+                  max={1.0}
+                  step={0.1}
+                />
+              </div>
+            )}
           </div>
 
           {/* Row 3: Controls */}
