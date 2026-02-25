@@ -21,12 +21,101 @@ const POWER_UP_COLORS: Record<PowerUpType, string> = {
   multiBall: 'hsl(280, 80%, 55%)',
 };
 
-const POWER_UP_ICONS: Record<PowerUpType, string> = {
-  enlargePaddle: '↕',
-  shrinkOpponent: '↔',
-  slowBall: '◐',
-  speedBall: '⚡',
-  multiBall: '◉',
+// Draw power-up icon using canvas primitives
+const drawPowerUpIcon = (ctx: CanvasRenderingContext2D, type: PowerUpType, x: number, y: number, size: number, time: number) => {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = '#fff';
+  ctx.fillStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+
+  const s = size * 0.45;
+
+  switch (type) {
+    case 'enlargePaddle': {
+      // Expand arrows icon ↕
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.lineTo(0, s);
+      ctx.stroke();
+      // Top arrow
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.5, -s * 0.5);
+      ctx.lineTo(0, -s);
+      ctx.lineTo(s * 0.5, -s * 0.5);
+      ctx.stroke();
+      // Bottom arrow
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.5, s * 0.5);
+      ctx.lineTo(0, s);
+      ctx.lineTo(s * 0.5, s * 0.5);
+      ctx.stroke();
+      break;
+    }
+    case 'shrinkOpponent': {
+      // Compress arrows ↔ pointing inward
+      ctx.beginPath();
+      ctx.moveTo(-s, 0);
+      ctx.lineTo(s, 0);
+      ctx.stroke();
+      // Left inward arrow
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.4, -s * 0.5);
+      ctx.lineTo(-s, 0);
+      ctx.lineTo(-s * 0.4, s * 0.5);
+      ctx.stroke();
+      // Right inward arrow
+      ctx.beginPath();
+      ctx.moveTo(s * 0.4, -s * 0.5);
+      ctx.lineTo(s, 0);
+      ctx.lineTo(s * 0.4, s * 0.5);
+      ctx.stroke();
+      break;
+    }
+    case 'slowBall': {
+      // Turtle/slow: two horizontal lines (pause-like)
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.3, -s * 0.2);
+      ctx.lineTo(s * 0.3, -s * 0.2);
+      ctx.moveTo(-s * 0.3, s * 0.2);
+      ctx.lineTo(s * 0.3, s * 0.2);
+      ctx.stroke();
+      break;
+    }
+    case 'speedBall': {
+      // Lightning bolt ⚡
+      ctx.beginPath();
+      ctx.moveTo(s * 0.15, -s);
+      ctx.lineTo(-s * 0.35, s * 0.05);
+      ctx.lineTo(s * 0.05, s * 0.05);
+      ctx.lineTo(-s * 0.15, s);
+      ctx.lineTo(s * 0.35, -s * 0.05);
+      ctx.lineTo(-s * 0.05, -s * 0.05);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case 'multiBall': {
+      // Three small circles
+      const r = s * 0.3;
+      const offset = s * 0.45;
+      ctx.beginPath();
+      ctx.arc(0, -offset, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-offset * 0.8, offset * 0.5, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(offset * 0.8, offset * 0.5, r, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+  }
+  ctx.restore();
 };
 
 export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
@@ -113,23 +202,39 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     });
 
     // Draw power-ups
+    const now = Date.now();
     gameState.powerUps.forEach((powerUp) => {
       if (!powerUp.active) return;
       const color = POWER_UP_COLORS[powerUp.type];
-      const pulse = Math.sin(Date.now() / 200) * 0.2 + 1;
+      const pulse = Math.sin(now / 200) * 0.15 + 1;
       const radius = 18 * pulse;
+      const rotation = now / 800;
+
+      // Outer glow
       ctx.shadowColor = color;
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 20;
+
+      // Background circle
       ctx.fillStyle = color;
+      ctx.globalAlpha = 0.85;
       ctx.beginPath();
       ctx.arc(powerUp.x, powerUp.y, radius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.globalAlpha = 1;
       ctx.shadowBlur = 0;
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 16px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(POWER_UP_ICONS[powerUp.type], powerUp.x, powerUp.y);
+
+      // Rotating ring
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(powerUp.x, powerUp.y, radius + 4, rotation, rotation + Math.PI * 1.2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(powerUp.x, powerUp.y, radius + 4, rotation + Math.PI, rotation + Math.PI * 2.2);
+      ctx.stroke();
+
+      // Icon
+      drawPowerUpIcon(ctx, powerUp.type, powerUp.x, powerUp.y, radius * 1.1, now);
     });
 
     // Draw scores
