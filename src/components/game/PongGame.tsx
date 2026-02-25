@@ -134,7 +134,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   useGameMusic(musicEnabled && !gameState.isPaused && !gameState.isGameOver);
 
   const { handleMouseMove, handleTouchMove } = useGameControls({
-    mode: config.mode,
+    config,
     canvasRef,
     movePaddle,
     togglePause,

@@ -49,6 +49,11 @@ export interface Player {
   connected?: boolean;
 }
 
+export interface KeyBindings {
+  up: string;   // key name (lowercase)
+  down: string;
+}
+
 export interface GameConfig {
   theme: GameTheme;
   mode: GameMode;
@@ -62,6 +67,9 @@ export interface GameConfig {
   paddleSensitivity: number; // 0.1 (very smooth) to 1.0 (instant)
   soundEnabled: boolean;
   musicEnabled: boolean;
+  player1Keys: KeyBindings;
+  player2Keys: KeyBindings;
+  mouseEnabled: boolean;
 }
 
 export interface GameState {
