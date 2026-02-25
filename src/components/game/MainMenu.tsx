@@ -13,7 +13,9 @@ import {
   Zap, 
   Trophy,
   Play,
-  Settings
+  Settings,
+  Volume2,
+  Music
 } from 'lucide-react';
 import { GameConfig, GameMode, GameTheme, BallSpeed, THEME_PRESETS } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -66,6 +68,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
     player1Nickname: 'Player 1',
     player2Nickname: 'Player 2',
     paddleSensitivity: 0.5,
+    soundEnabled: true,
+    musicEnabled: false,
   });
 
   const handleThemeChange = (theme: GameTheme) => {
@@ -313,6 +317,46 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
               checked={config.powerUpsEnabled}
               onCheckedChange={(checked) => setConfig(prev => ({ ...prev, powerUpsEnabled: checked }))}
             />
+          </div>
+
+          {/* Audio Settings */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Volume2 className="w-4 h-4" />
+              Audio
+            </Label>
+            <div className="flex items-center justify-between p-4 rounded-lg border">
+              <div className="flex items-center gap-3">
+                <Volume2 className="w-5 h-5 text-blue-500" />
+                <div>
+                  <Label htmlFor="sound" className="cursor-pointer">Effetti sonori</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Colpi, punti e power-ups
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="sound"
+                checked={config.soundEnabled}
+                onCheckedChange={(checked) => setConfig(prev => ({ ...prev, soundEnabled: checked }))}
+              />
+            </div>
+            <div className="flex items-center justify-between p-4 rounded-lg border">
+              <div className="flex items-center gap-3">
+                <Music className="w-5 h-5 text-purple-500" />
+                <div>
+                  <Label htmlFor="music" className="cursor-pointer">Musica di sottofondo</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Melodia retro durante la partita
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="music"
+                checked={config.musicEnabled}
+                onCheckedChange={(checked) => setConfig(prev => ({ ...prev, musicEnabled: checked }))}
+              />
+            </div>
           </div>
 
           {/* Start Button */}
