@@ -1,6 +1,6 @@
 // Game Types for Pong Multiplayer
 
-export type GameTheme = 'retro' | 'minimal' | 'minimal-dark' | 'futuristic' | 'custom';
+export type GameTheme = 'retro' | 'minimal' | 'minimal-dark' | 'futuristic' | 'ocean' | 'sunset' | 'candy' | 'sepia' | 'blood' | 'matrix' | 'frost' | 'vaporwave' | 'custom';
 
 export type GameMode = 'single' | 'local' | 'online';
 
@@ -126,6 +126,75 @@ export const THEME_PRESETS: Record<GameTheme, ThemeColors> = {
     ball: '45 100% 60%',
     accent: '260 100% 70%',
     glow: '200 100% 50%',
+  },
+  ocean: {
+    background: '210 60% 12%',
+    foreground: '185 80% 65%',
+    paddle1: '175 90% 55%',
+    paddle2: '195 80% 70%',
+    ball: '180 100% 80%',
+    accent: '200 90% 50%',
+    glow: '185 80% 50%',
+  },
+  sunset: {
+    background: '270 30% 12%',
+    foreground: '30 100% 65%',
+    paddle1: '20 100% 60%',
+    paddle2: '280 70% 65%',
+    ball: '45 100% 70%',
+    accent: '350 80% 60%',
+    glow: '30 100% 50%',
+  },
+  candy: {
+    background: '300 20% 95%',
+    foreground: '330 80% 55%',
+    paddle1: '330 90% 65%',
+    paddle2: '190 80% 55%',
+    ball: '280 70% 60%',
+    accent: '50 90% 60%',
+  },
+  sepia: {
+    background: '35 30% 15%',
+    foreground: '35 40% 70%',
+    paddle1: '35 50% 65%',
+    paddle2: '25 35% 55%',
+    ball: '40 50% 75%',
+    accent: '30 40% 50%',
+  },
+  blood: {
+    background: '0 0% 4%',
+    foreground: '0 85% 50%',
+    paddle1: '0 90% 55%',
+    paddle2: '0 70% 40%',
+    ball: '0 100% 60%',
+    accent: '0 80% 45%',
+    glow: '0 90% 40%',
+  },
+  matrix: {
+    background: '0 0% 2%',
+    foreground: '120 100% 45%',
+    paddle1: '120 100% 50%',
+    paddle2: '120 80% 35%',
+    ball: '120 100% 60%',
+    accent: '120 90% 40%',
+    glow: '120 100% 45%',
+  },
+  frost: {
+    background: '210 30% 95%',
+    foreground: '200 50% 40%',
+    paddle1: '200 60% 50%',
+    paddle2: '210 40% 60%',
+    ball: '195 70% 45%',
+    accent: '200 50% 70%',
+  },
+  vaporwave: {
+    background: '270 40% 10%',
+    foreground: '310 100% 70%',
+    paddle1: '180 100% 60%',
+    paddle2: '310 100% 65%',
+    ball: '50 100% 70%',
+    accent: '280 80% 60%',
+    glow: '310 100% 60%',
   },
   custom: {
     background: '220 20% 10%',

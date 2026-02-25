@@ -35,6 +35,14 @@ const THEME_OPTIONS: { value: GameTheme; label: string; icon: string; descriptio
   { value: 'minimal', label: 'Minimal', icon: '⚪', description: 'Chiaro, bianco e nero' },
   { value: 'minimal-dark', label: 'Minimal Dark', icon: '⚫', description: 'Scuro, bianco e nero' },
   { value: 'futuristic', label: 'Futuristico', icon: '🚀', description: 'Glow & particelle' },
+  { value: 'ocean', label: 'Ocean', icon: '🌊', description: 'Blu profondo, acquamarina' },
+  { value: 'sunset', label: 'Sunset', icon: '🌅', description: 'Arancio e viola caldo' },
+  { value: 'candy', label: 'Candy', icon: '🍬', description: 'Rosa pastello, giocoso' },
+  { value: 'sepia', label: 'Sepia', icon: '🏜️', description: 'Vintage fotografico' },
+  { value: 'blood', label: 'Blood', icon: '🩸', description: 'Rosso intenso su nero' },
+  { value: 'matrix', label: 'Matrix', icon: '🌿', description: 'Verde terminale hacker' },
+  { value: 'frost', label: 'Frost', icon: '❄️', description: 'Azzurro ghiaccio, pulito' },
+  { value: 'vaporwave', label: 'Vaporwave', icon: '👾', description: 'Rosa/ciano anni 80' },
   { value: 'custom', label: 'Personalizzato', icon: '🌈', description: 'Scegli i tuoi colori' },
 ];
 
@@ -247,13 +255,13 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                 <Palette className="w-3 h-3" />
                 Tema
               </Label>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-3 gap-1 max-h-[180px] overflow-y-auto pr-1">
                 {THEME_OPTIONS.map((theme) => (
                   <button
                     key={theme.value}
                     onClick={() => handleThemeChange(theme.value)}
                     className={cn(
-                      "p-2 rounded-md border-2 text-left transition-all hover:scale-[1.02]",
+                      "p-1.5 rounded-md border-2 text-left transition-all hover:scale-[1.02]",
                       config.theme === theme.value
                         ? "border-primary bg-primary/10"
                         : "border-border hover:border-primary/50"
