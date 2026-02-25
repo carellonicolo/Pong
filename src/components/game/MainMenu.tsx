@@ -80,7 +80,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
     player2Nickname: 'Player 2',
     paddleSensitivity: 0.5,
     soundEnabled: true,
-    musicEnabled: false,
+    musicEnabled: true,
     player1Keys: mode === 'single' ? { up: 'arrowup', down: 'arrowdown' } : { up: 'w', down: 's' },
     player2Keys: { up: 'arrowup', down: 'arrowdown' },
     mouseEnabled: mode === 'single',
