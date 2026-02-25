@@ -5,6 +5,7 @@ import { GameConfig, THEME_PRESETS, GAME_WIDTH, GAME_HEIGHT } from '@/types/game
 import { useGameEngine } from '@/hooks/useGameEngine';
 import { useGameControls } from '@/hooks/useGameControls';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useGameSounds } from '@/hooks/useGameSounds';
 import { Pause, Play, RotateCcw, Home, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import {
   AlertDialog,
@@ -31,6 +32,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   const [displaySize, setDisplaySize] = useState({ width: 800, height: 500 });
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const { playPaddleHit, playWallHit, playScore, playPowerUp, playVictory } = useGameSounds(soundEnabled);
 
   // Fullscreen toggle
   const toggleFullscreen = useCallback(() => {
@@ -114,6 +116,13 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
         onGameOver(winner, 0, 0);
       }
     }, [onGameOver]),
+    sounds: {
+      onPaddleHit: playPaddleHit,
+      onWallHit: playWallHit,
+      onScore: playScore,
+      onPowerUp: playPowerUp,
+      onVictory: playVictory,
+    },
   });
 
   const { handleMouseMove, handleTouchMove } = useGameControls({

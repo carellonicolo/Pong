@@ -18,10 +18,19 @@ const PADDLE_HEIGHT = 100;
 const BALL_RADIUS = 10;
 const CANVAS_PADDING = 20;
 
+interface SoundCallbacks {
+  onPaddleHit?: () => void;
+  onWallHit?: () => void;
+  onScore?: () => void;
+  onPowerUp?: () => void;
+  onVictory?: () => void;
+}
+
 interface UseGameEngineProps {
   config: GameConfig;
   onScoreUpdate?: (player1Score: number, player2Score: number) => void;
   onGameOver?: (winner: number) => void;
+  sounds?: SoundCallbacks;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -65,6 +74,7 @@ export const useGameEngine = ({
   config,
   onScoreUpdate,
   onGameOver,
+  sounds,
 }: UseGameEngineProps) => {
   const speed = BALL_SPEEDS[config.ballSpeed];
   
@@ -84,6 +94,10 @@ export const useGameEngine = ({
   const animationFrameRef = useRef<number>();
   const lastPowerUpSpawnRef = useRef<number>(0);
   const activePowerUpsRef = useRef<Map<string, { type: PowerUpType; player: number; expiresAt: number }>>(new Map());
+
+  // Keep sounds in ref so game loop always has latest
+  const soundsRef = useRef<SoundCallbacks>({});
+  useEffect(() => { soundsRef.current = sounds || {}; }, [sounds]);
 
   const resetBall = useCallback(() => {
     setGameState(prev => ({
@@ -175,6 +189,7 @@ export const useGameEngine = ({
     if (newBall.y - newBall.radius <= 0 || newBall.y + newBall.radius >= GAME_HEIGHT) {
       newBall.vy = -newBall.vy;
       newBall.y = Math.max(newBall.radius, Math.min(GAME_HEIGHT - newBall.radius, newBall.y));
+      soundsRef.current.onWallHit?.();
     }
 
     // Paddle collisions
@@ -198,6 +213,7 @@ export const useGameEngine = ({
         newBall.vx = Math.cos(angle) * speed * (index === 0 ? 1 : -1);
         newBall.vy = Math.sin(angle) * speed;
         newBall.x = index === 0 ? paddleRight + newBall.radius : paddleLeft - newBall.radius;
+        soundsRef.current.onPaddleHit?.();
       }
     });
 
@@ -259,6 +275,7 @@ export const useGameEngine = ({
             ...newPlayers[scored],
             paddle: { ...newPlayers[scored].paddle, score: newPlayers[scored].paddle.score + 1 },
           };
+          soundsRef.current.onScore?.();
           
           if (prev.balls.length > 1) {
             ballsToRemove.push(index);
@@ -276,6 +293,7 @@ export const useGameEngine = ({
           if (dist < updatedBall.radius + 15) {
             const playerIndex = updatedBall.vx > 0 ? 0 : 1;
             applyPowerUp(powerUp.type, playerIndex);
+            soundsRef.current.onPowerUp?.();
             return false;
           }
           return true;
@@ -300,6 +318,7 @@ export const useGameEngine = ({
       // Check for winner
       const winner = newPlayers.findIndex(p => p.paddle.score >= config.winScore);
       if (winner >= 0) {
+        soundsRef.current.onVictory?.();
         return { ...prev, balls: newBalls, players: newPlayers, powerUps: newPowerUps, isGameOver: true, winner };
       }
 
