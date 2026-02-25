@@ -1,5 +1,6 @@
 import React, { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
 import { GameState, THEME_PRESETS, PowerUpType, GAME_WIDTH, GAME_HEIGHT } from '@/types/game';
+import { useParticles } from '@/hooks/useParticles';
 
 interface GameCanvasProps {
   gameState: GameState;
@@ -7,6 +8,9 @@ interface GameCanvasProps {
   displayHeight: number;
   onMouseMove?: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onTouchMove?: (e: React.TouchEvent<HTMLCanvasElement>) => void;
+  onPaddleHit?: (x: number, y: number, color: string) => void;
+  onWallHit?: (x: number, y: number) => void;
+  onScore?: (x: number, y: number) => void;
 }
 
 const POWER_UP_COLORS: Record<PowerUpType, string> = {
@@ -34,18 +38,17 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
 }, ref) => {
   const internalRef = useRef<HTMLCanvasElement>(null);
   const theme = THEME_PRESETS[gameState.config.theme];
+  const { emitTrail, update: updateParticles, draw: drawParticles, particlesRef } = useParticles();
+  const prevBallsRef = useRef<{ x: number; y: number; vx: number; vy: number }[]>([]);
 
-  // Expose the internal ref to parent components
   useImperativeHandle(ref, () => internalRef.current!);
 
   useEffect(() => {
     const canvas = internalRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Scale canvas buffer to match display size for crisp rendering
     const dpr = window.devicePixelRatio || 1;
     const bufferWidth = Math.round(displayWidth * dpr);
     const bufferHeight = Math.round(displayHeight * dpr);
@@ -55,14 +58,13 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
       canvas.height = bufferHeight;
     }
 
-    // Map all drawing from game coordinates (GAME_WIDTH x GAME_HEIGHT) to buffer
     ctx.setTransform(bufferWidth / GAME_WIDTH, 0, 0, bufferHeight / GAME_HEIGHT, 0, 0);
 
-    // Clear canvas (uses fixed internal resolution)
+    // Clear
     ctx.fillStyle = `hsl(${theme.background})`;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Draw center line
+    // Center line
     ctx.setLineDash([10, 10]);
     ctx.strokeStyle = `hsl(${theme.foreground} / 0.3)`;
     ctx.lineWidth = 2;
@@ -72,23 +74,30 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Draw glow effect for retro/futuristic themes
-    const hasGlow = gameState.config.theme === 'retro' || gameState.config.theme === 'futuristic';
+    const hasGlow = !!theme.glow;
 
     // Draw paddles
     gameState.players.forEach((player) => {
       const { paddle } = player;
-      
       if (hasGlow) {
         ctx.shadowColor = `hsl(${paddle.color})`;
         ctx.shadowBlur = 15;
       }
-      
       ctx.fillStyle = `hsl(${paddle.color})`;
       ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
-      
       ctx.shadowBlur = 0;
     });
+
+    // Ball trail + particles
+    if (!gameState.isPaused && !gameState.isGameOver) {
+      gameState.balls.forEach((ball) => {
+        emitTrail(ball.x, ball.y, theme.ball);
+      });
+    }
+
+    // Update & draw particles
+    updateParticles();
+    drawParticles(ctx);
 
     // Draw balls
     gameState.balls.forEach((ball) => {
@@ -96,35 +105,25 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
         ctx.shadowColor = `hsl(${theme.ball})`;
         ctx.shadowBlur = 20;
       }
-      
       ctx.fillStyle = `hsl(${theme.ball})`;
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
       ctx.fill();
-      
       ctx.shadowBlur = 0;
     });
 
     // Draw power-ups
     gameState.powerUps.forEach((powerUp) => {
       if (!powerUp.active) return;
-
       const color = POWER_UP_COLORS[powerUp.type];
-      
-      // Pulsing animation
       const pulse = Math.sin(Date.now() / 200) * 0.2 + 1;
       const radius = 18 * pulse;
-      
       ctx.shadowColor = color;
       ctx.shadowBlur = 15;
-      
-      // Draw outer circle
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(powerUp.x, powerUp.y, radius, 0, Math.PI * 2);
       ctx.fill();
-      
-      // Draw icon
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 16px monospace';
@@ -138,16 +137,8 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     ctx.fillStyle = `hsl(${theme.foreground} / 0.3)`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(
-      gameState.players[0].paddle.score.toString(),
-      GAME_WIDTH / 4,
-      30
-    );
-    ctx.fillText(
-      gameState.players[1].paddle.score.toString(),
-      (GAME_WIDTH * 3) / 4,
-      30
-    );
+    ctx.fillText(gameState.players[0].paddle.score.toString(), GAME_WIDTH / 4, 30);
+    ctx.fillText(gameState.players[1].paddle.score.toString(), (GAME_WIDTH * 3) / 4, 30);
 
     // Draw player names
     ctx.font = '14px sans-serif';
@@ -155,37 +146,21 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     ctx.fillText(gameState.players[0].nickname, GAME_WIDTH / 4, 85);
     ctx.fillText(gameState.players[1].nickname, (GAME_WIDTH * 3) / 4, 85);
 
-    // Draw pause/game over overlay
-    if (gameState.isPaused || gameState.isGameOver) {
+    // Pause overlay (no game over overlay here — VictoryScreen handles it)
+    if (gameState.isPaused && !gameState.isGameOver) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
       ctx.fillStyle = `hsl(${theme.foreground})`;
       ctx.font = 'bold 36px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-
-      if (gameState.isGameOver && gameState.winner !== null) {
-        ctx.fillText(
-          `${gameState.players[gameState.winner].nickname} Wins!`,
-          GAME_WIDTH / 2,
-          GAME_HEIGHT / 2 - 20
-        );
-        ctx.font = '20px sans-serif';
-        ctx.fillText('Press SPACE to play again', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
-      } else if (gameState.isPaused) {
-        ctx.fillText('PAUSED', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
-        ctx.font = '18px sans-serif';
-        ctx.fillText('Press SPACE to start', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
-        ctx.font = '14px sans-serif';
-        ctx.fillStyle = `hsl(${theme.foreground} / 0.7)`;
-        ctx.fillText('W/S or Mouse - Player 1', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 70);
-        if (gameState.config.mode === 'local') {
-          ctx.fillText('↑/↓ or Touch Right - Player 2', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 90);
-        }
-      }
+      ctx.fillText('PAUSA', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
+      ctx.font = '18px sans-serif';
+      ctx.fillText('SPAZIO per riprendere', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
     }
-  }, [gameState, theme, displayWidth, displayHeight]);
+
+    prevBallsRef.current = gameState.balls.map(b => ({ x: b.x, y: b.y, vx: b.vx, vy: b.vy }));
+  }, [gameState, theme, displayWidth, displayHeight, emitTrail, updateParticles, drawParticles]);
 
   return (
     <canvas
@@ -197,8 +172,8 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
       style={{
         width: displayWidth,
         height: displayHeight,
-        boxShadow: gameState.config.theme !== 'minimal' 
-          ? `0 0 30px hsl(${theme.glow || theme.accent} / 0.3)` 
+        boxShadow: theme.glow
+          ? `0 0 30px hsl(${theme.glow} / 0.3)` 
           : undefined,
       }}
     />
