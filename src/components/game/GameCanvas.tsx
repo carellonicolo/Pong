@@ -45,6 +45,19 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Scale canvas buffer to match display size for crisp rendering
+    const dpr = window.devicePixelRatio || 1;
+    const bufferWidth = Math.round(displayWidth * dpr);
+    const bufferHeight = Math.round(displayHeight * dpr);
+
+    if (canvas.width !== bufferWidth || canvas.height !== bufferHeight) {
+      canvas.width = bufferWidth;
+      canvas.height = bufferHeight;
+    }
+
+    // Map all drawing from game coordinates (GAME_WIDTH x GAME_HEIGHT) to buffer
+    ctx.setTransform(bufferWidth / GAME_WIDTH, 0, 0, bufferHeight / GAME_HEIGHT, 0, 0);
+
     // Clear canvas (uses fixed internal resolution)
     ctx.fillStyle = `hsl(${theme.background})`;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -172,13 +185,11 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
         }
       }
     }
-  }, [gameState, theme]);
+  }, [gameState, theme, displayWidth, displayHeight]);
 
   return (
     <canvas
       ref={internalRef}
-      width={GAME_WIDTH}
-      height={GAME_HEIGHT}
       onMouseMove={onMouseMove}
       onTouchMove={onTouchMove}
       onTouchStart={(e) => e.preventDefault()}
