@@ -6,7 +6,7 @@ import {
   Player,
   PowerUp,
   PowerUpType,
-  BALL_SPEEDS,
+  getBallSpeed,
   POWER_UP_DURATION,
   POWER_UP_SPAWN_INTERVAL,
   GAME_WIDTH,
@@ -76,7 +76,7 @@ export const useGameEngine = ({
   onGameOver,
   sounds,
 }: UseGameEngineProps) => {
-  const speed = BALL_SPEEDS[config.ballSpeed];
+  const speed = getBallSpeed(config.ballSpeed);
   
   const [gameState, setGameState] = useState<GameState>(() => ({
     balls: [createBall(speed)],

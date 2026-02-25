@@ -4,7 +4,7 @@ export type GameTheme = 'retro' | 'minimal' | 'minimal-dark' | 'futuristic' | 'o
 
 export type GameMode = 'single' | 'local' | 'online';
 
-export type BallSpeed = 'slow' | 'normal' | 'fast';
+export type BallSpeed = number;
 
 export type PowerUpType = 
   | 'enlargePaddle'    // 🔵 Makes your paddle bigger
@@ -208,10 +208,9 @@ export const THEME_PRESETS: Record<GameTheme, ThemeColors> = {
   },
 };
 
-export const BALL_SPEEDS: Record<BallSpeed, number> = {
-  slow: 4,
-  normal: 6,
-  fast: 9,
+export const getBallSpeed = (value: number): number => {
+  // Maps 1-10 to speed 3-12
+  return 3 + (value - 1) * (9 / 9);
 };
 
 export const POWER_UP_DURATION = 8000; // 8 seconds

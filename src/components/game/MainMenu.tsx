@@ -22,7 +22,7 @@ import {
   Keyboard,
   Sparkles
 } from 'lucide-react';
-import { GameConfig, GameMode, GameTheme, BallSpeed, KeyBindings, THEME_PRESETS } from '@/types/game';
+import { GameConfig, GameMode, GameTheme, KeyBindings, THEME_PRESETS } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { KeyBindButton } from './KeyBindButton';
 import { BouncingBall } from './BouncingBall';
@@ -54,11 +54,6 @@ const MODE_OPTIONS: { value: GameMode; label: string; icon: React.ReactNode; des
   { value: 'online', label: 'Online', icon: <Globe className="w-6 h-6" />, description: 'Sfida giocatori reali' },
 ];
 
-const SPEED_OPTIONS: { value: BallSpeed; label: string }[] = [
-  { value: 'slow', label: 'Lenta' },
-  { value: 'normal', label: 'Normale' },
-  { value: 'fast', label: 'Veloce' },
-];
 
 const COLOR_PRESETS = [
   '210 100% 50%', // Blue
@@ -77,7 +72,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
     theme: 'retro',
     mode,
     winScore: 5,
-    ballSpeed: 'normal',
+    ballSpeed: 5,
     powerUpsEnabled: true,
     player1Color: THEME_PRESETS.retro.paddle1,
     player2Color: THEME_PRESETS.retro.paddle2,
@@ -360,20 +355,19 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Velocità Palla</Label>
-              <div className="flex gap-1">
-                {SPEED_OPTIONS.map((speed) => (
-                  <Button
-                    key={speed.value}
-                    variant={config.ballSpeed === speed.value ? "default" : "outline"}
-                    size="sm"
-                    className="h-7 text-xs px-2 flex-1"
-                    onClick={() => setConfig(prev => ({ ...prev, ballSpeed: speed.value }))}
-                  >
-                    {speed.label}
-                  </Button>
-                ))}
+              <div className="flex justify-between">
+                <Label className="text-xs">Velocità Palla</Label>
+                <span className="text-xs font-medium">
+                  {config.ballSpeed <= 3 ? 'Lenta' : config.ballSpeed <= 6 ? 'Normale' : config.ballSpeed <= 8 ? 'Veloce' : 'Turbo'}
+                </span>
               </div>
+              <Slider
+                value={[config.ballSpeed]}
+                onValueChange={([value]) => setConfig(prev => ({ ...prev, ballSpeed: value }))}
+                min={1}
+                max={10}
+                step={1}
+              />
             </div>
             <div className="space-y-1.5">
               <div className="flex justify-between">
