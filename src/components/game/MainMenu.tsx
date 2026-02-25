@@ -22,6 +22,7 @@ import {
 import { GameConfig, GameMode, GameTheme, BallSpeed, KeyBindings, THEME_PRESETS } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { KeyBindButton } from './KeyBindButton';
+import { BouncingBall } from './BouncingBall';
 
 interface MainMenuProps {
   onStartGame: (config: GameConfig) => void;
@@ -128,6 +129,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
             </defs>
             <rect width="100%" height="100%" fill="url(#diag)"/>
           </svg>
+          <BouncingBall />
         </div>
         <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h1 className="text-6xl md:text-8xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
