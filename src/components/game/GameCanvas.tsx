@@ -353,7 +353,8 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
       ctx.fillStyle = `hsl(${theme.foreground} / 0.3)`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
-      const currentMaxSpeed = Math.max(...gameState.balls.map(b => Math.sqrt(b.vx ** 2 + b.vy ** 2)));
+      const speeds = gameState.balls.map(b => Math.sqrt(b.vx ** 2 + b.vy ** 2));
+      const currentMaxSpeed = speeds.length > 0 ? Math.max(...speeds) : 0;
       ctx.fillText(`Scambi: ${gameState.stats.rallies}`, 15, GAME_HEIGHT - 12);
       ctx.textAlign = 'center';
       ctx.fillText(`Velocità: ${currentMaxSpeed.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT - 12);
