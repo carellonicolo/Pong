@@ -15,7 +15,8 @@ import {
   Play,
   Settings,
   Volume2,
-  Music
+  Music,
+  RotateCcw
 } from 'lucide-react';
 import { GameConfig, GameMode, GameTheme, BallSpeed, THEME_PRESETS } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -57,9 +58,9 @@ const COLOR_PRESETS = [
 
 export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboard }) => {
   const [showConfig, setShowConfig] = useState(false);
-  const [config, setConfig] = useState<GameConfig>({
+  const getDefaultConfig = (mode: GameMode): GameConfig => ({
     theme: 'retro',
-    mode: 'single',
+    mode,
     winScore: 5,
     ballSpeed: 'normal',
     powerUpsEnabled: true,
@@ -71,6 +72,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
     soundEnabled: true,
     musicEnabled: false,
   });
+
+  const [config, setConfig] = useState<GameConfig>(getDefaultConfig('single'));
+
+  const handleResetDefaults = () => {
+    setConfig(getDefaultConfig(config.mode));
+  };
 
   const handleThemeChange = (theme: GameTheme) => {
     const themeColors = THEME_PRESETS[theme];
@@ -155,9 +162,15 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                 {MODE_OPTIONS.find(m => m.value === config.mode)?.description}
               </CardDescription>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setShowConfig(false)}>
-              ← Indietro
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={handleResetDefaults} title="Ripristina valori predefiniti">
+                <RotateCcw className="w-4 h-4 mr-1" />
+                Default
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowConfig(false)}>
+                ← Indietro
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
