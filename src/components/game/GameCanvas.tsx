@@ -351,15 +351,28 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     if (!gameState.isPaused && !gameState.isGameOver && gameState.stats) {
       ctx.font = '11px sans-serif';
       ctx.fillStyle = `hsl(${theme.foreground} / 0.3)`;
-      ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
       const speeds = gameState.balls.map(b => Math.sqrt(b.vx ** 2 + b.vy ** 2));
       const currentMaxSpeed = speeds.length > 0 ? Math.max(...speeds) : 0;
-      ctx.fillText(`Scambi: ${gameState.stats.rallies}`, GAME_WIDTH * 0.25, GAME_HEIGHT - 12);
-      ctx.textAlign = 'center';
-      ctx.fillText(`Velocità: ${currentMaxSpeed.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT - 12);
-      ctx.textAlign = 'right';
-      ctx.fillText(`Power-up: ${gameState.stats.powerUpsCollected}`, GAME_WIDTH * 0.75, GAME_HEIGHT - 12);
+
+      if (gameState.config.mode === 'survival') {
+        const elapsed = gameState.stats.survivalTime;
+        const mins = Math.floor(elapsed / 60000);
+        const secs = String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0');
+        ctx.textAlign = 'left';
+        ctx.fillText(`⏱ ${mins}:${secs}`, GAME_WIDTH * 0.25, GAME_HEIGHT - 12);
+        ctx.textAlign = 'center';
+        ctx.fillText(`Palle: ${gameState.balls.length} · Scambi: ${gameState.stats.rallies}`, GAME_WIDTH / 2, GAME_HEIGHT - 12);
+        ctx.textAlign = 'right';
+        ctx.fillText(`Vite: ${3 - gameState.players[1].paddle.score}/3`, GAME_WIDTH * 0.75, GAME_HEIGHT - 12);
+      } else {
+        ctx.textAlign = 'left';
+        ctx.fillText(`Scambi: ${gameState.stats.rallies}`, GAME_WIDTH * 0.25, GAME_HEIGHT - 12);
+        ctx.textAlign = 'center';
+        ctx.fillText(`Velocità: ${currentMaxSpeed.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT - 12);
+        ctx.textAlign = 'right';
+        ctx.fillText(`Power-up: ${gameState.stats.powerUpsCollected}`, GAME_WIDTH * 0.75, GAME_HEIGHT - 12);
+      }
     }
 
     if (gameState.isPaused && !gameState.isGameOver) {

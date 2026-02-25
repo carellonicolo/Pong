@@ -2,7 +2,7 @@
 
 export type GameTheme = 'retro' | 'minimal' | 'minimal-dark' | 'futuristic' | 'ocean' | 'sunset' | 'candy' | 'sepia' | 'blood' | 'matrix' | 'frost' | 'vaporwave' | 'custom';
 
-export type GameMode = 'single' | 'local' | 'online';
+export type GameMode = 'single' | 'local' | 'online' | 'survival';
 
 export type BallSpeed = number;
 
@@ -78,12 +78,15 @@ export interface GameConfig {
   mouseEnabled: boolean;
   particlesEnabled: boolean;
   aiDifficulty: number; // 0.1 (easy) to 1.0 (hard)
+  commentatorEnabled: boolean;
 }
 
 export interface GameStats {
-  rallies: number;        // total paddle hits this game
-  maxBallSpeed: number;   // max speed reached
+  rallies: number;
+  maxBallSpeed: number;
   powerUpsCollected: number;
+  survivalTime: number;      // ms elapsed in survival mode
+  survivalBallsAdded: number; // extra balls spawned
 }
 
 export interface GameState {

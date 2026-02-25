@@ -21,9 +21,11 @@ const CANVAS_PADDING = 20;
 interface SoundCallbacks {
   onPaddleHit?: () => void;
   onWallHit?: () => void;
-  onScore?: () => void;
-  onPowerUp?: () => void;
+  onScore?: (scorerIndex: number) => void;
+  onPowerUp?: (type: string) => void;
   onVictory?: () => void;
+  onSurvivalBallAdded?: () => void;
+  onRally?: (count: number) => void;
 }
 
 interface UseGameEngineProps {
@@ -82,18 +84,20 @@ export const useGameEngine = ({
     balls: [createBall(speed)],
     players: [
       createPlayer('p1', config.player1Nickname, config.player1Color, 'left'),
-      createPlayer('p2', config.player2Nickname, config.player2Color, 'right', config.mode === 'single'),
+      createPlayer('p2', config.player2Nickname, config.player2Color, 'right', config.mode === 'single' || config.mode === 'survival'),
     ],
     powerUps: [],
     isPaused: true,
     isGameOver: false,
     winner: null,
     config,
-    stats: { rallies: 0, maxBallSpeed: speed, powerUpsCollected: 0 },
+    stats: { rallies: 0, maxBallSpeed: speed, powerUpsCollected: 0, survivalTime: 0, survivalBallsAdded: 0 },
   }));
 
   const animationFrameRef = useRef<number>();
   const lastPowerUpSpawnRef = useRef<number>(0);
+  const survivalStartRef = useRef<number>(0);
+  const lastSurvivalBallRef = useRef<number>(0);
   const activePowerUpsRef = useRef<Map<string, { type: PowerUpType; player: number; expiresAt: number }>>(new Map());
 
   // Keep sounds in ref so game loop always has latest
@@ -308,6 +312,7 @@ export const useGameEngine = ({
         const prevBall = prev.balls[index];
         if (prevBall && Math.sign(prevBall.vx) !== Math.sign(updatedBall.vx) && prevBall.vx !== 0) {
           newStats.rallies++;
+          soundsRef.current.onRally?.(newStats.rallies);
         }
 
         if (scored >= 0) {
@@ -326,7 +331,7 @@ export const useGameEngine = ({
             ...newPlayers[scored],
             paddle: { ...newPlayers[scored].paddle, score: newPlayers[scored].paddle.score + 1 },
           };
-          soundsRef.current.onScore?.();
+          soundsRef.current.onScore?.(scored);
           
           if (prev.balls.length > 1) {
             ballsToRemove.push(index);
@@ -344,7 +349,7 @@ export const useGameEngine = ({
           if (dist < updatedBall.radius + 15) {
             const playerIndex = updatedBall.vx > 0 ? 0 : 1;
             applyPowerUp(powerUp.type, playerIndex);
-            soundsRef.current.onPowerUp?.();
+            soundsRef.current.onPowerUp?.(powerUp.type);
             return false;
           }
           return true;
@@ -366,7 +371,27 @@ export const useGameEngine = ({
         setTimeout(spawnPowerUp, 0);
       }
 
-      // Check for winner
+      // Survival mode: add balls over time, game over when player 1 concedes
+      if (config.mode === 'survival') {
+        const elapsed = now - survivalStartRef.current;
+        newStats.survivalTime = elapsed;
+        // Add a new ball every 15 seconds
+        const expectedBalls = Math.floor(elapsed / 15000);
+        if (expectedBalls > newStats.survivalBallsAdded) {
+          newStats.survivalBallsAdded = expectedBalls;
+          newBalls.push(createBall(speed * (1 + expectedBalls * 0.1)));
+          soundsRef.current.onSurvivalBallAdded?.();
+        }
+        // In survival, player 1 (index 1 = CPU scores) means player lost
+        // Game over when player 1 (human) concedes 3 goals
+        if (newPlayers[1].paddle.score >= 3) {
+          soundsRef.current.onVictory?.();
+          return { ...prev, balls: newBalls, players: newPlayers, powerUps: newPowerUps, isGameOver: true, winner: 1, stats: newStats };
+        }
+        return { ...prev, balls: newBalls, players: newPlayers, powerUps: newPowerUps, stats: newStats };
+      }
+
+      // Check for winner (normal modes)
       const winner = newPlayers.findIndex(p => p.paddle.score >= config.winScore);
       if (winner >= 0) {
         soundsRef.current.onVictory?.();
@@ -382,6 +407,8 @@ export const useGameEngine = ({
   const startGame = useCallback(() => {
     setGameState(prev => ({ ...prev, isPaused: false }));
     lastPowerUpSpawnRef.current = Date.now();
+    survivalStartRef.current = Date.now();
+    lastSurvivalBallRef.current = Date.now();
   }, []);
 
   const pauseGame = useCallback(() => {
@@ -398,14 +425,14 @@ export const useGameEngine = ({
       balls: [createBall(speed)],
       players: [
         createPlayer('p1', config.player1Nickname, config.player1Color, 'left'),
-        createPlayer('p2', config.player2Nickname, config.player2Color, 'right', config.mode === 'single'),
+        createPlayer('p2', config.player2Nickname, config.player2Color, 'right', config.mode === 'single' || config.mode === 'survival'),
       ],
       powerUps: [],
       isPaused: true,
       isGameOver: false,
       winner: null,
       config,
-      stats: { rallies: 0, maxBallSpeed: speed, powerUpsCollected: 0 },
+      stats: { rallies: 0, maxBallSpeed: speed, powerUpsCollected: 0, survivalTime: 0, survivalBallsAdded: 0 },
     });
   }, [speed, config]);
 
