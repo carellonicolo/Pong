@@ -3,65 +3,69 @@ import { GameTheme } from '@/types/game';
 
 interface MusicStyle {
   chords: number[][];
-  tempo: number; // ms per note
+  tempo: number;
   waveform: OscillatorType;
   bassWaveform: OscillatorType;
   gain: number;
 }
 
-const MUSIC_STYLES: Record<string, MusicStyle> = {
-  retro: {
-    chords: [[130.81, 155.56, 196.00], [174.61, 220.00, 261.63], [155.56, 196.00, 233.08], [164.81, 196.00, 246.94]],
-    tempo: 200, waveform: 'triangle', bassWaveform: 'sine', gain: 0.08,
-  },
-  minimal: {
-    chords: [[261.63, 329.63, 392.00], [293.66, 349.23, 440.00], [329.63, 392.00, 493.88], [261.63, 329.63, 392.00]],
-    tempo: 300, waveform: 'sine', bassWaveform: 'sine', gain: 0.05,
-  },
-  'minimal-dark': {
-    chords: [[196.00, 233.08, 293.66], [220.00, 261.63, 329.63], [196.00, 246.94, 293.66], [174.61, 220.00, 261.63]],
-    tempo: 280, waveform: 'sine', bassWaveform: 'sine', gain: 0.05,
-  },
-  futuristic: {
-    chords: [[146.83, 174.61, 220.00], [164.81, 196.00, 246.94], [174.61, 220.00, 277.18], [196.00, 233.08, 293.66]],
-    tempo: 160, waveform: 'sawtooth', bassWaveform: 'square', gain: 0.06,
-  },
-  ocean: {
-    chords: [[196.00, 246.94, 293.66], [220.00, 277.18, 329.63], [246.94, 311.13, 369.99], [220.00, 277.18, 329.63]],
-    tempo: 350, waveform: 'sine', bassWaveform: 'sine', gain: 0.06,
-  },
-  sunset: {
-    chords: [[220.00, 277.18, 329.63], [246.94, 311.13, 369.99], [261.63, 329.63, 392.00], [233.08, 293.66, 349.23]],
-    tempo: 260, waveform: 'triangle', bassWaveform: 'sine', gain: 0.07,
-  },
-  candy: {
-    chords: [[329.63, 392.00, 493.88], [349.23, 440.00, 523.25], [392.00, 493.88, 587.33], [349.23, 440.00, 523.25]],
-    tempo: 180, waveform: 'square', bassWaveform: 'triangle', gain: 0.05,
-  },
-  sepia: {
-    chords: [[196.00, 233.08, 293.66], [174.61, 220.00, 261.63], [164.81, 196.00, 246.94], [174.61, 220.00, 261.63]],
-    tempo: 320, waveform: 'triangle', bassWaveform: 'sine', gain: 0.06,
-  },
-  blood: {
-    chords: [[130.81, 155.56, 196.00], [123.47, 146.83, 174.61], [116.54, 138.59, 164.81], [123.47, 146.83, 174.61]],
-    tempo: 240, waveform: 'sawtooth', bassWaveform: 'square', gain: 0.07,
-  },
-  matrix: {
-    chords: [[130.81, 164.81, 196.00], [146.83, 174.61, 220.00], [130.81, 164.81, 196.00], [155.56, 196.00, 233.08]],
-    tempo: 150, waveform: 'square', bassWaveform: 'square', gain: 0.06,
-  },
-  frost: {
-    chords: [[293.66, 369.99, 440.00], [329.63, 392.00, 493.88], [349.23, 440.00, 523.25], [329.63, 392.00, 493.88]],
-    tempo: 340, waveform: 'sine', bassWaveform: 'sine', gain: 0.05,
-  },
-  vaporwave: {
-    chords: [[220.00, 277.18, 329.63], [196.00, 246.94, 293.66], [233.08, 293.66, 349.23], [207.65, 261.63, 311.13]],
-    tempo: 280, waveform: 'triangle', bassWaveform: 'triangle', gain: 0.07,
-  },
-  custom: {
-    chords: [[130.81, 155.56, 196.00], [174.61, 220.00, 261.63], [155.56, 196.00, 233.08], [164.81, 196.00, 246.94]],
-    tempo: 200, waveform: 'triangle', bassWaveform: 'sine', gain: 0.08,
-  },
+interface ThemeMusicSet {
+  tracks: MusicStyle[];
+}
+
+const MUSIC_STYLES: Record<string, ThemeMusicSet> = {
+  retro: { tracks: [
+    { chords: [[130.81, 155.56, 196.00], [174.61, 220.00, 261.63], [155.56, 196.00, 233.08], [164.81, 196.00, 246.94]], tempo: 200, waveform: 'triangle', bassWaveform: 'sine', gain: 0.08 },
+    { chords: [[164.81, 196.00, 246.94], [146.83, 174.61, 220.00], [130.81, 164.81, 196.00], [155.56, 196.00, 233.08]], tempo: 180, waveform: 'square', bassWaveform: 'triangle', gain: 0.07 },
+  ]},
+  minimal: { tracks: [
+    { chords: [[261.63, 329.63, 392.00], [293.66, 349.23, 440.00], [329.63, 392.00, 493.88], [261.63, 329.63, 392.00]], tempo: 300, waveform: 'sine', bassWaveform: 'sine', gain: 0.05 },
+    { chords: [[329.63, 392.00, 493.88], [261.63, 329.63, 392.00], [293.66, 349.23, 440.00], [329.63, 392.00, 493.88]], tempo: 320, waveform: 'sine', bassWaveform: 'sine', gain: 0.04 },
+  ]},
+  'minimal-dark': { tracks: [
+    { chords: [[196.00, 233.08, 293.66], [220.00, 261.63, 329.63], [196.00, 246.94, 293.66], [174.61, 220.00, 261.63]], tempo: 280, waveform: 'sine', bassWaveform: 'sine', gain: 0.05 },
+    { chords: [[174.61, 220.00, 261.63], [196.00, 233.08, 293.66], [164.81, 196.00, 246.94], [196.00, 246.94, 293.66]], tempo: 300, waveform: 'triangle', bassWaveform: 'sine', gain: 0.05 },
+  ]},
+  futuristic: { tracks: [
+    { chords: [[146.83, 174.61, 220.00], [164.81, 196.00, 246.94], [174.61, 220.00, 277.18], [196.00, 233.08, 293.66]], tempo: 160, waveform: 'sawtooth', bassWaveform: 'square', gain: 0.06 },
+    { chords: [[196.00, 246.94, 311.13], [220.00, 277.18, 349.23], [174.61, 220.00, 277.18], [164.81, 207.65, 261.63]], tempo: 140, waveform: 'sawtooth', bassWaveform: 'sine', gain: 0.06 },
+  ]},
+  ocean: { tracks: [
+    { chords: [[196.00, 246.94, 293.66], [220.00, 277.18, 329.63], [246.94, 311.13, 369.99], [220.00, 277.18, 329.63]], tempo: 350, waveform: 'sine', bassWaveform: 'sine', gain: 0.06 },
+    { chords: [[246.94, 311.13, 369.99], [233.08, 293.66, 349.23], [220.00, 277.18, 329.63], [196.00, 246.94, 293.66]], tempo: 380, waveform: 'sine', bassWaveform: 'triangle', gain: 0.05 },
+  ]},
+  sunset: { tracks: [
+    { chords: [[220.00, 277.18, 329.63], [246.94, 311.13, 369.99], [261.63, 329.63, 392.00], [233.08, 293.66, 349.23]], tempo: 260, waveform: 'triangle', bassWaveform: 'sine', gain: 0.07 },
+    { chords: [[233.08, 293.66, 349.23], [261.63, 329.63, 392.00], [220.00, 277.18, 329.63], [196.00, 246.94, 293.66]], tempo: 240, waveform: 'triangle', bassWaveform: 'triangle', gain: 0.06 },
+  ]},
+  candy: { tracks: [
+    { chords: [[329.63, 392.00, 493.88], [349.23, 440.00, 523.25], [392.00, 493.88, 587.33], [349.23, 440.00, 523.25]], tempo: 180, waveform: 'square', bassWaveform: 'triangle', gain: 0.05 },
+    { chords: [[392.00, 493.88, 587.33], [329.63, 392.00, 493.88], [349.23, 440.00, 523.25], [293.66, 369.99, 440.00]], tempo: 160, waveform: 'square', bassWaveform: 'sine', gain: 0.05 },
+  ]},
+  sepia: { tracks: [
+    { chords: [[196.00, 233.08, 293.66], [174.61, 220.00, 261.63], [164.81, 196.00, 246.94], [174.61, 220.00, 261.63]], tempo: 320, waveform: 'triangle', bassWaveform: 'sine', gain: 0.06 },
+    { chords: [[174.61, 220.00, 261.63], [164.81, 196.00, 246.94], [155.56, 196.00, 233.08], [174.61, 220.00, 261.63]], tempo: 340, waveform: 'sine', bassWaveform: 'sine', gain: 0.05 },
+  ]},
+  blood: { tracks: [
+    { chords: [[130.81, 155.56, 196.00], [123.47, 146.83, 174.61], [116.54, 138.59, 164.81], [123.47, 146.83, 174.61]], tempo: 240, waveform: 'sawtooth', bassWaveform: 'square', gain: 0.07 },
+    { chords: [[116.54, 146.83, 174.61], [123.47, 155.56, 196.00], [130.81, 164.81, 196.00], [116.54, 138.59, 164.81]], tempo: 220, waveform: 'sawtooth', bassWaveform: 'sawtooth', gain: 0.06 },
+  ]},
+  matrix: { tracks: [
+    { chords: [[130.81, 164.81, 196.00], [146.83, 174.61, 220.00], [130.81, 164.81, 196.00], [155.56, 196.00, 233.08]], tempo: 150, waveform: 'square', bassWaveform: 'square', gain: 0.06 },
+    { chords: [[155.56, 196.00, 233.08], [130.81, 164.81, 196.00], [146.83, 174.61, 220.00], [164.81, 196.00, 246.94]], tempo: 130, waveform: 'square', bassWaveform: 'triangle', gain: 0.06 },
+  ]},
+  frost: { tracks: [
+    { chords: [[293.66, 369.99, 440.00], [329.63, 392.00, 493.88], [349.23, 440.00, 523.25], [329.63, 392.00, 493.88]], tempo: 340, waveform: 'sine', bassWaveform: 'sine', gain: 0.05 },
+    { chords: [[349.23, 440.00, 523.25], [293.66, 369.99, 440.00], [329.63, 392.00, 493.88], [311.13, 369.99, 466.16]], tempo: 360, waveform: 'sine', bassWaveform: 'triangle', gain: 0.04 },
+  ]},
+  vaporwave: { tracks: [
+    { chords: [[220.00, 277.18, 329.63], [196.00, 246.94, 293.66], [233.08, 293.66, 349.23], [207.65, 261.63, 311.13]], tempo: 280, waveform: 'triangle', bassWaveform: 'triangle', gain: 0.07 },
+    { chords: [[207.65, 261.63, 311.13], [233.08, 293.66, 349.23], [220.00, 277.18, 329.63], [196.00, 246.94, 293.66]], tempo: 300, waveform: 'sine', bassWaveform: 'triangle', gain: 0.06 },
+  ]},
+  custom: { tracks: [
+    { chords: [[130.81, 155.56, 196.00], [174.61, 220.00, 261.63], [155.56, 196.00, 233.08], [164.81, 196.00, 246.94]], tempo: 200, waveform: 'triangle', bassWaveform: 'sine', gain: 0.08 },
+    { chords: [[164.81, 196.00, 246.94], [146.83, 174.61, 220.00], [130.81, 164.81, 196.00], [155.56, 196.00, 233.08]], tempo: 180, waveform: 'square', bassWaveform: 'triangle', gain: 0.07 },
+  ]},
 };
 
 export const useGameMusic = (enabled: boolean, theme: GameTheme = 'retro') => {
@@ -88,7 +92,8 @@ export const useGameMusic = (enabled: boolean, theme: GameTheme = 'retro') => {
     const ctx = ctxRef.current;
     if (ctx.state === 'suspended') ctx.resume();
 
-    const style = MUSIC_STYLES[theme] || MUSIC_STYLES.retro;
+    const themeSet = MUSIC_STYLES[theme] || MUSIC_STYLES.retro;
+    const style = themeSet.tracks[Math.floor(Math.random() * themeSet.tracks.length)];
 
     const master = ctx.createGain();
     master.gain.setValueAtTime(style.gain, ctx.currentTime);

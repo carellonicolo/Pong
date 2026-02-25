@@ -280,6 +280,9 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
           <span>🟢 Rallenta</span>
           <span>🟡 Velocizza</span>
           <span>🟣 Multi-palla</span>
+          <span>🛡️ Scudo</span>
+          <span>👻 Invisibile</span>
+          <span>🔄 Inverti</span>
         </div>
       )}
 

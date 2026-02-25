@@ -89,6 +89,7 @@ export const useGameEngine = ({
     isGameOver: false,
     winner: null,
     config,
+    stats: { rallies: 0, maxBallSpeed: speed, powerUpsCollected: 0 },
   }));
 
   const animationFrameRef = useRef<number>();
@@ -109,7 +110,7 @@ export const useGameEngine = ({
   const spawnPowerUp = useCallback(() => {
     if (!config.powerUpsEnabled) return;
     
-    const types: PowerUpType[] = ['enlargePaddle', 'shrinkOpponent', 'slowBall', 'speedBall', 'multiBall'];
+    const types: PowerUpType[] = ['enlargePaddle', 'shrinkOpponent', 'slowBall', 'speedBall', 'multiBall', 'shield', 'invisiblePaddle', 'reverseControls'];
     const type = types[Math.floor(Math.random() * types.length)];
     
     const powerUp: PowerUp = {
@@ -149,24 +150,44 @@ export const useGameEngine = ({
             paddle: { ...newPlayers[opponentIndex].paddle, height: newPlayers[opponentIndex].paddle.baseHeight * 0.6 },
           };
           break;
+        case 'shield':
+          newPlayers[playerIndex] = {
+            ...newPlayers[playerIndex],
+            paddle: { ...newPlayers[playerIndex].paddle, hasShield: true },
+          };
+          break;
+        case 'invisiblePaddle':
+          newPlayers[opponentIndex] = {
+            ...newPlayers[opponentIndex],
+            paddle: { ...newPlayers[opponentIndex].paddle, isInvisible: true },
+          };
+          break;
+        case 'reverseControls':
+          newPlayers[opponentIndex] = {
+            ...newPlayers[opponentIndex],
+            paddle: { ...newPlayers[opponentIndex].paddle, controlsReversed: true },
+          };
+          break;
         case 'slowBall':
           return {
             ...prev,
             balls: prev.balls.map(b => ({ ...b, vx: b.vx * 0.6, vy: b.vy * 0.6 })),
             players: newPlayers,
+            stats: { ...prev.stats, powerUpsCollected: prev.stats.powerUpsCollected + 1 },
           };
         case 'speedBall':
           return {
             ...prev,
             balls: prev.balls.map(b => ({ ...b, vx: b.vx * 1.5, vy: b.vy * 1.5 })),
             players: newPlayers,
+            stats: { ...prev.stats, powerUpsCollected: prev.stats.powerUpsCollected + 1 },
           };
         case 'multiBall':
           const extraBalls = [1, 2].map(() => createBall(speed));
-          return { ...prev, balls: [...prev.balls, ...extraBalls], players: newPlayers };
+          return { ...prev, balls: [...prev.balls, ...extraBalls], players: newPlayers, stats: { ...prev.stats, powerUpsCollected: prev.stats.powerUpsCollected + 1 } };
       }
 
-      return { ...prev, players: newPlayers };
+      return { ...prev, players: newPlayers, stats: { ...prev.stats, powerUpsCollected: prev.stats.powerUpsCollected + 1 } };
     });
 
     // Schedule power-up expiration
@@ -174,8 +195,8 @@ export const useGameEngine = ({
       activePowerUpsRef.current.delete(id);
       setGameState(prev => {
         const newPlayers = [...prev.players] as [Player, Player];
-        newPlayers[0] = { ...newPlayers[0], paddle: { ...newPlayers[0].paddle, height: newPlayers[0].paddle.baseHeight } };
-        newPlayers[1] = { ...newPlayers[1], paddle: { ...newPlayers[1].paddle, height: newPlayers[1].paddle.baseHeight } };
+        newPlayers[0] = { ...newPlayers[0], paddle: { ...newPlayers[0].paddle, height: newPlayers[0].paddle.baseHeight, hasShield: false, isInvisible: false, controlsReversed: false } };
+        newPlayers[1] = { ...newPlayers[1], paddle: { ...newPlayers[1].paddle, height: newPlayers[1].paddle.baseHeight, hasShield: false, isInvisible: false, controlsReversed: false } };
         return { ...prev, players: newPlayers };
       });
     }, POWER_UP_DURATION);
@@ -261,6 +282,7 @@ export const useGameEngine = ({
       let newBalls = [...prev.balls];
       let newPlayers = [...prev.players] as [Player, Player];
       let newPowerUps = [...prev.powerUps];
+      const newStats = { ...prev.stats };
 
       // Update AI paddle
       if (newPlayers[1].isAI) {
@@ -279,7 +301,27 @@ export const useGameEngine = ({
         const newBall = { ...ball, x: ball.x + ball.vx, y: ball.y + ball.vy };
         const { ball: updatedBall, scored } = checkCollisions(newBall, newPlayers);
 
+        // Track rallies and max speed on paddle hit
+        const currentSpeed = Math.sqrt(updatedBall.vx ** 2 + updatedBall.vy ** 2);
+        if (currentSpeed > newStats.maxBallSpeed) newStats.maxBallSpeed = currentSpeed;
+        // Detect paddle hit: vx direction changed
+        const prevBall = prev.balls[index];
+        if (prevBall && Math.sign(prevBall.vx) !== Math.sign(updatedBall.vx) && prevBall.vx !== 0) {
+          newStats.rallies++;
+        }
+
         if (scored >= 0) {
+          // Check shield
+          const scoredAgainst = scored === 0 ? 1 : 0;
+          if (newPlayers[scoredAgainst].paddle.hasShield) {
+            newPlayers[scoredAgainst] = {
+              ...newPlayers[scoredAgainst],
+              paddle: { ...newPlayers[scoredAgainst].paddle, hasShield: false },
+            };
+            // Bounce ball back instead of scoring
+            return { ...updatedBall, vx: -updatedBall.vx, x: scored === 0 ? updatedBall.radius + 5 : GAME_WIDTH - updatedBall.radius - 5 };
+          }
+
           newPlayers[scored] = {
             ...newPlayers[scored],
             paddle: { ...newPlayers[scored].paddle, score: newPlayers[scored].paddle.score + 1 },
@@ -328,10 +370,10 @@ export const useGameEngine = ({
       const winner = newPlayers.findIndex(p => p.paddle.score >= config.winScore);
       if (winner >= 0) {
         soundsRef.current.onVictory?.();
-        return { ...prev, balls: newBalls, players: newPlayers, powerUps: newPowerUps, isGameOver: true, winner };
+        return { ...prev, balls: newBalls, players: newPlayers, powerUps: newPowerUps, isGameOver: true, winner, stats: newStats };
       }
 
-      return { ...prev, balls: newBalls, players: newPlayers, powerUps: newPowerUps };
+      return { ...prev, balls: newBalls, players: newPlayers, powerUps: newPowerUps, stats: newStats };
     });
 
     animationFrameRef.current = requestAnimationFrame(gameLoop);
@@ -363,6 +405,7 @@ export const useGameEngine = ({
       isGameOver: false,
       winner: null,
       config,
+      stats: { rallies: 0, maxBallSpeed: speed, powerUpsCollected: 0 },
     });
   }, [speed, config]);
 
@@ -370,11 +413,13 @@ export const useGameEngine = ({
     setGameState(prev => {
       const newPlayers = [...prev.players] as [Player, Player];
       const paddle = newPlayers[playerIndex].paddle;
+      // Reverse controls: invert Y position around center
+      const effectiveY = paddle.controlsReversed ? (GAME_HEIGHT - y) : y;
       newPlayers[playerIndex] = {
         ...newPlayers[playerIndex],
         paddle: {
           ...paddle,
-          y: Math.max(0, Math.min(GAME_HEIGHT - paddle.height, y - paddle.height / 2)),
+          y: Math.max(0, Math.min(GAME_HEIGHT - paddle.height, effectiveY - paddle.height / 2)),
         },
       };
       return { ...prev, players: newPlayers };

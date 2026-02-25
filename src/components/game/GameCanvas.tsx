@@ -19,6 +19,9 @@ const POWER_UP_COLORS: Record<PowerUpType, string> = {
   slowBall: 'hsl(120, 70%, 45%)',
   speedBall: 'hsl(45, 100%, 50%)',
   multiBall: 'hsl(280, 80%, 55%)',
+  shield: 'hsl(180, 80%, 50%)',
+  invisiblePaddle: 'hsl(260, 60%, 65%)',
+  reverseControls: 'hsl(30, 90%, 55%)',
 };
 
 // Draw power-up icon using canvas primitives
@@ -114,6 +117,62 @@ const drawPowerUpIcon = (ctx: CanvasRenderingContext2D, type: PowerUpType, x: nu
       ctx.fill();
       break;
     }
+    case 'shield': {
+      // Shield icon
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.quadraticCurveTo(s, -s * 0.6, s, 0);
+      ctx.quadraticCurveTo(s, s * 0.6, 0, s);
+      ctx.quadraticCurveTo(-s, s * 0.6, -s, 0);
+      ctx.quadraticCurveTo(-s, -s * 0.6, 0, -s);
+      ctx.closePath();
+      ctx.stroke();
+      // Checkmark inside
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.3, 0);
+      ctx.lineTo(-s * 0.05, s * 0.3);
+      ctx.lineTo(s * 0.35, -s * 0.25);
+      ctx.stroke();
+      break;
+    }
+    case 'invisiblePaddle': {
+      // Ghost/eye with slash
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 0.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Slash
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.7, s * 0.7);
+      ctx.lineTo(s * 0.7, -s * 0.7);
+      ctx.stroke();
+      break;
+    }
+    case 'reverseControls': {
+      // Reverse arrows ↕ crossed
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.5, -s * 0.3);
+      ctx.lineTo(s * 0.5, s * 0.3);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.5, s * 0.3);
+      ctx.lineTo(s * 0.5, -s * 0.3);
+      ctx.stroke();
+      // Arrow heads
+      ctx.beginPath();
+      ctx.moveTo(s * 0.2, s * 0.6);
+      ctx.lineTo(s * 0.5, s * 0.3);
+      ctx.lineTo(s * 0.2, s * 0.0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.2, -s * 0.6);
+      ctx.lineTo(-s * 0.5, -s * 0.3);
+      ctx.lineTo(-s * 0.2, 0);
+      ctx.stroke();
+      break;
+    }
   }
   ctx.restore();
 };
@@ -168,13 +227,35 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     // Draw paddles
     gameState.players.forEach((player) => {
       const { paddle } = player;
-      if (hasGlow) {
-        ctx.shadowColor = `hsl(${paddle.color})`;
-        ctx.shadowBlur = 15;
+      if (paddle.isInvisible) {
+        // Draw very faint outline for invisible paddle
+        ctx.strokeStyle = `hsl(${paddle.color} / 0.15)`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(paddle.x, paddle.y, paddle.width, paddle.height);
+        ctx.setLineDash([]);
+      } else {
+        if (hasGlow) {
+          ctx.shadowColor = `hsl(${paddle.color})`;
+          ctx.shadowBlur = 15;
+        }
+        ctx.fillStyle = `hsl(${paddle.color})`;
+        ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+        ctx.shadowBlur = 0;
       }
-      ctx.fillStyle = `hsl(${paddle.color})`;
-      ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
-      ctx.shadowBlur = 0;
+      // Shield indicator
+      if (paddle.hasShield) {
+        ctx.strokeStyle = 'hsl(180, 80%, 50%)';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = 'hsl(180, 80%, 50%)';
+        ctx.shadowBlur = 10;
+        const shieldX = paddle.x < GAME_WIDTH / 2 ? paddle.x - 6 : paddle.x + paddle.width + 6;
+        ctx.beginPath();
+        ctx.moveTo(shieldX, paddle.y - 5);
+        ctx.lineTo(shieldX, paddle.y + paddle.height + 5);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
     });
 
     // Ball trail + particles
@@ -251,7 +332,20 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     ctx.fillText(gameState.players[0].nickname, GAME_WIDTH / 4, 85);
     ctx.fillText(gameState.players[1].nickname, (GAME_WIDTH * 3) / 4, 85);
 
-    // Pause overlay (no game over overlay here — VictoryScreen handles it)
+    // In-game stats (bottom area)
+    if (!gameState.isPaused && !gameState.isGameOver && gameState.stats) {
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = `hsl(${theme.foreground} / 0.3)`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      const currentMaxSpeed = Math.max(...gameState.balls.map(b => Math.sqrt(b.vx ** 2 + b.vy ** 2)));
+      ctx.fillText(`Scambi: ${gameState.stats.rallies}`, 15, GAME_HEIGHT - 12);
+      ctx.textAlign = 'center';
+      ctx.fillText(`Velocità: ${currentMaxSpeed.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT - 12);
+      ctx.textAlign = 'right';
+      ctx.fillText(`Power-up: ${gameState.stats.powerUpsCollected}`, GAME_WIDTH - 15, GAME_HEIGHT - 12);
+    }
+
     if (gameState.isPaused && !gameState.isGameOver) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);

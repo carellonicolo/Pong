@@ -11,7 +11,10 @@ export type PowerUpType =
   | 'shrinkOpponent'   // 🔴 Shrinks opponent's paddle
   | 'slowBall'         // 🟢 Slows down the ball
   | 'speedBall'        // 🟡 Speeds up the ball
-  | 'multiBall';       // 🟣 Spawns extra balls
+  | 'multiBall'        // 🟣 Spawns extra balls
+  | 'shield'           // 🛡️ Blocks one goal
+  | 'invisiblePaddle'  // 👻 Makes opponent's paddle invisible
+  | 'reverseControls'; // 🔄 Reverses opponent's controls
 
 export interface PowerUp {
   id: string;
@@ -39,6 +42,9 @@ export interface Paddle {
   baseHeight: number;
   color: string;
   score: number;
+  hasShield?: boolean;
+  isInvisible?: boolean;
+  controlsReversed?: boolean;
 }
 
 export interface Player {
@@ -74,6 +80,12 @@ export interface GameConfig {
   aiDifficulty: number; // 0.1 (easy) to 1.0 (hard)
 }
 
+export interface GameStats {
+  rallies: number;        // total paddle hits this game
+  maxBallSpeed: number;   // max speed reached
+  powerUpsCollected: number;
+}
+
 export interface GameState {
   balls: Ball[];
   players: [Player, Player];
@@ -82,6 +94,7 @@ export interface GameState {
   isGameOver: boolean;
   winner: number | null;
   config: GameConfig;
+  stats: GameStats;
 }
 
 export interface ThemeColors {
