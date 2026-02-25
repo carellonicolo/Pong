@@ -16,10 +16,12 @@ import {
   Settings,
   Volume2,
   Music,
-  RotateCcw
+  RotateCcw,
+  Keyboard
 } from 'lucide-react';
-import { GameConfig, GameMode, GameTheme, BallSpeed, THEME_PRESETS } from '@/types/game';
+import { GameConfig, GameMode, GameTheme, BallSpeed, KeyBindings, THEME_PRESETS } from '@/types/game';
 import { cn } from '@/lib/utils';
+import { KeyBindButton } from './KeyBindButton';
 
 interface MainMenuProps {
   onStartGame: (config: GameConfig) => void;
@@ -71,6 +73,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
     paddleSensitivity: 0.5,
     soundEnabled: true,
     musicEnabled: false,
+    player1Keys: mode === 'single' ? { up: 'arrowup', down: 'arrowdown' } : { up: 'w', down: 's' },
+    player2Keys: { up: 'arrowup', down: 'arrowdown' },
+    mouseEnabled: mode === 'single',
   });
 
   const [config, setConfig] = useState<GameConfig>(getDefaultConfig('single'));
@@ -117,7 +122,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
               size="lg"
               className="h-20 justify-start gap-4 text-left hover:scale-[1.02] transition-transform"
               onClick={() => {
-                setConfig(prev => ({ ...prev, mode: option.value }));
+                setConfig(getDefaultConfig(option.value));
                 setShowConfig(true);
               }}
             >
@@ -312,6 +317,70 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
             <p className="text-xs text-muted-foreground">
               Più bassa = movimento più fluido e controllato
             </p>
+          </div>
+
+          {/* Controls Configuration */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Keyboard className="w-4 h-4" />
+              Controlli
+            </Label>
+            
+            {config.mode === 'single' && (
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div>
+                  <Label htmlFor="mouse" className="cursor-pointer text-sm">Controllo mouse</Label>
+                  <p className="text-xs text-muted-foreground">Muovi la racchetta col mouse</p>
+                </div>
+                <Switch
+                  id="mouse"
+                  checked={config.mouseEnabled}
+                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, mouseEnabled: checked }))}
+                />
+              </div>
+            )}
+
+            <div className="p-3 rounded-lg border space-y-2">
+              <Label className="text-sm">{config.mode === 'single' ? 'Tasti movimento' : 'Giocatore 1'}</Label>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Su:</span>
+                  <KeyBindButton
+                    currentKey={config.player1Keys.up}
+                    onKeyChange={(key) => setConfig(prev => ({ ...prev, player1Keys: { ...prev.player1Keys, up: key } }))}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Giù:</span>
+                  <KeyBindButton
+                    currentKey={config.player1Keys.down}
+                    onKeyChange={(key) => setConfig(prev => ({ ...prev, player1Keys: { ...prev.player1Keys, down: key } }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {config.mode === 'local' && (
+              <div className="p-3 rounded-lg border space-y-2">
+                <Label className="text-sm">Giocatore 2</Label>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Su:</span>
+                    <KeyBindButton
+                      currentKey={config.player2Keys.up}
+                      onKeyChange={(key) => setConfig(prev => ({ ...prev, player2Keys: { ...prev.player2Keys, up: key } }))}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Giù:</span>
+                    <KeyBindButton
+                      currentKey={config.player2Keys.down}
+                      onKeyChange={(key) => setConfig(prev => ({ ...prev, player2Keys: { ...prev.player2Keys, down: key } }))}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Power-ups Toggle */}

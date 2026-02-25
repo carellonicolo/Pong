@@ -1,21 +1,15 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { GameMode, GAME_WIDTH, GAME_HEIGHT } from '@/types/game';
+import { GameConfig, GAME_WIDTH, GAME_HEIGHT } from '@/types/game';
 
 interface UseGameControlsProps {
-  mode: GameMode;
+  config: GameConfig;
   canvasRef: React.RefObject<HTMLCanvasElement>;
   movePaddle: (playerIndex: number, y: number) => void;
   togglePause: () => void;
   isPaused: boolean;
-  sensitivity: number; // 0.1 to 1.0
+  sensitivity: number;
 }
 
-/**
- * Convert screen-space Y coordinate to game-space Y coordinate.
- * The canvas internal resolution is fixed (GAME_WIDTH x GAME_HEIGHT),
- * but it's CSS-scaled to fit the viewport. This converts mouse/touch
- * positions from screen pixels to the internal coordinate system.
- */
 const screenToGameY = (screenY: number, canvas: HTMLCanvasElement): number => {
   const rect = canvas.getBoundingClientRect();
   const ratioY = GAME_HEIGHT / rect.height;
@@ -29,7 +23,7 @@ const screenToGameX = (screenX: number, canvas: HTMLCanvasElement): number => {
 };
 
 export const useGameControls = ({
-  mode,
+  config,
   canvasRef,
   movePaddle,
   togglePause,
@@ -38,18 +32,18 @@ export const useGameControls = ({
 }: UseGameControlsProps) => {
   const keysPressed = useRef<Set<string>>(new Set());
   const paddleSpeed = 12;
-  // Track target and current positions for interpolation
   const mouseTargetY = useRef<number | null>(null);
   const currentMouseY = useRef<number | null>(null);
-  const touchTargetY = useRef<Map<number, number>>(new Map()); // playerIndex -> targetY
+  const touchTargetY = useRef<Map<number, number>>(new Map());
   const currentTouchY = useRef<Map<number, number>>(new Map());
+
+  const { player1Keys, player2Keys, mode, mouseEnabled } = config;
 
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       keysPressed.current.add(e.key.toLowerCase());
 
-      // Pause toggle
       if (e.key === 'Escape' || e.key === ' ') {
         e.preventDefault();
         togglePause();
@@ -69,7 +63,7 @@ export const useGameControls = ({
     };
   }, [togglePause]);
 
-  // Continuous keyboard movement - works even when paused to position paddle
+  // Continuous keyboard movement using configured keys
   useEffect(() => {
     let animationId: number;
     let lastPaddle1Y: number | null = null;
@@ -82,23 +76,23 @@ export const useGameControls = ({
         return;
       }
 
-      // Player 1 controls (W/S) - uses GAME_HEIGHT for bounds
-      if (keysPressed.current.has('w')) {
+      // Player 1 controls
+      if (keysPressed.current.has(player1Keys.up)) {
         lastPaddle1Y = (lastPaddle1Y ?? GAME_HEIGHT / 2) - paddleSpeed;
         movePaddle(0, Math.max(50, lastPaddle1Y));
       }
-      if (keysPressed.current.has('s')) {
+      if (keysPressed.current.has(player1Keys.down)) {
         lastPaddle1Y = (lastPaddle1Y ?? GAME_HEIGHT / 2) + paddleSpeed;
         movePaddle(0, Math.min(GAME_HEIGHT - 50, lastPaddle1Y));
       }
 
-      // Player 2 controls (Arrow keys) - only for local multiplayer
+      // Player 2 controls - only for local multiplayer
       if (mode === 'local') {
-        if (keysPressed.current.has('arrowup')) {
+        if (keysPressed.current.has(player2Keys.up)) {
           lastPaddle2Y = (lastPaddle2Y ?? GAME_HEIGHT / 2) - paddleSpeed;
           movePaddle(1, Math.max(50, lastPaddle2Y));
         }
-        if (keysPressed.current.has('arrowdown')) {
+        if (keysPressed.current.has(player2Keys.down)) {
           lastPaddle2Y = (lastPaddle2Y ?? GAME_HEIGHT / 2) + paddleSpeed;
           movePaddle(1, Math.min(GAME_HEIGHT - 50, lastPaddle2Y));
         }
@@ -108,16 +102,15 @@ export const useGameControls = ({
     };
 
     animationId = requestAnimationFrame(updatePaddles);
-
     return () => cancelAnimationFrame(animationId);
-  }, [mode, canvasRef, movePaddle]);
+  }, [mode, canvasRef, movePaddle, player1Keys, player2Keys]);
 
-  // Interpolation loop for smooth paddle movement
+  // Interpolation loop for smooth mouse/touch movement
   useEffect(() => {
     let animId: number;
     const lerp = () => {
-      // Mouse (player 1)
-      if (mouseTargetY.current !== null) {
+      // Mouse (player 1) - only if enabled
+      if (mouseEnabled && mouseTargetY.current !== null) {
         if (currentMouseY.current === null) currentMouseY.current = mouseTargetY.current;
         currentMouseY.current += (mouseTargetY.current - currentMouseY.current) * sensitivity;
         movePaddle(0, currentMouseY.current);
@@ -133,15 +126,16 @@ export const useGameControls = ({
     };
     animId = requestAnimationFrame(lerp);
     return () => cancelAnimationFrame(animId);
-  }, [movePaddle, sensitivity]);
+  }, [movePaddle, sensitivity, mouseEnabled]);
 
-  // Mouse controls for player 1 - stores target, lerp loop moves paddle
+  // Mouse controls - only stores target if mouse is enabled
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!mouseEnabled) return;
     const canvas = e.currentTarget;
     mouseTargetY.current = screenToGameY(e.clientY, canvas);
-  }, []);
+  }, [mouseEnabled]);
 
-  // Touch controls - stores targets, lerp loop moves paddles
+  // Touch controls
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const canvas = e.currentTarget;
