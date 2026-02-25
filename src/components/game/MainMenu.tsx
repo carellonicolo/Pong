@@ -226,6 +226,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           <rect width="100%" height="100%" fill="url(#diag2)"/>
         </svg>
       </div>
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent relative z-10 text-center">
+        PONG
+      </h1>
       <Card className="w-full max-w-2xl relative z-10 bg-background/95 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
