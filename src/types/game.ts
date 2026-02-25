@@ -1,6 +1,6 @@
 // Game Types for Pong Multiplayer
 
-export type GameTheme = 'retro' | 'minimal' | 'futuristic' | 'custom';
+export type GameTheme = 'retro' | 'minimal' | 'minimal-dark' | 'futuristic' | 'custom';
 
 export type GameMode = 'single' | 'local' | 'online';
 
@@ -109,6 +109,14 @@ export const THEME_PRESETS: Record<GameTheme, ThemeColors> = {
     paddle2: '0 0% 30%',
     ball: '0 0% 10%',
     accent: '0 0% 50%',
+  },
+  'minimal-dark': {
+    background: '0 0% 6%',
+    foreground: '0 0% 90%',
+    paddle1: '0 0% 90%',
+    paddle2: '0 0% 65%',
+    ball: '0 0% 90%',
+    accent: '0 0% 45%',
   },
   futuristic: {
     background: '230 30% 8%',
