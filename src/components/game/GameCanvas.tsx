@@ -186,8 +186,9 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
 }, ref) => {
   const internalRef = useRef<HTMLCanvasElement>(null);
   const theme = THEME_PRESETS[gameState.config.theme];
-  const { emitTrail, update: updateParticles, draw: drawParticles, particlesRef } = useParticles();
+  const { emit, emitTrail, update: updateParticles, draw: drawParticles, particlesRef } = useParticles();
   const prevBallsRef = useRef<{ x: number; y: number; vx: number; vy: number }[]>([]);
+  const prevPowerUpIdsRef = useRef<Map<string, { x: number; y: number; type: PowerUpType }>>(new Map());
 
   useImperativeHandle(ref, () => internalRef.current!);
 
@@ -257,6 +258,20 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
         ctx.shadowBlur = 0;
       }
     });
+
+    // Detect collected power-ups and emit burst particles at their position
+    const currentActiveIds = new Set(gameState.powerUps.filter(p => p.active).map(p => p.id));
+    prevPowerUpIdsRef.current.forEach((info, id) => {
+      if (!currentActiveIds.has(id)) {
+        // Power-up was collected — burst at its position
+        const hslMatch = POWER_UP_COLORS[info.type].match(/hsl\((.+)\)/);
+        const color = hslMatch ? hslMatch[1] : theme.accent;
+        emit(info.x, info.y, color, 30, 7, [3, 8]);
+      }
+    });
+    const newMap = new Map<string, { x: number; y: number; type: PowerUpType }>();
+    gameState.powerUps.forEach(p => { if (p.active) newMap.set(p.id, { x: p.x, y: p.y, type: p.type }); });
+    prevPowerUpIdsRef.current = newMap;
 
     // Ball trail + particles
     if (!gameState.isPaused && !gameState.isGameOver && gameState.config.particlesEnabled) {
@@ -359,7 +374,7 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({
     }
 
     prevBallsRef.current = gameState.balls.map(b => ({ x: b.x, y: b.y, vx: b.vx, vy: b.vy }));
-  }, [gameState, theme, displayWidth, displayHeight, emitTrail, updateParticles, drawParticles]);
+  }, [gameState, theme, displayWidth, displayHeight, emit, emitTrail, updateParticles, drawParticles]);
 
   return (
     <canvas
