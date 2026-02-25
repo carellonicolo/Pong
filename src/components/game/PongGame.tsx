@@ -9,7 +9,8 @@ import { useGameControls } from '@/hooks/useGameControls';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import { useGameMusic } from '@/hooks/useGameMusic';
-import { Pause, Play, RotateCcw, Home, Volume2, VolumeX, Maximize, Minimize, Music } from 'lucide-react';
+import { useCommentator } from '@/hooks/useCommentator';
+import { Pause, Play, RotateCcw, Home, Volume2, VolumeX, Maximize, Minimize, Music, Mic, MicOff } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,11 +34,13 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   const isMobile = useIsMobile();
   const [soundEnabled, setSoundEnabled] = useState(config.soundEnabled);
   const [musicEnabled, setMusicEnabled] = useState(config.musicEnabled);
+  const [commentatorEnabled, setCommentatorEnabled] = useState(config.commentatorEnabled);
   const [displaySize, setDisplaySize] = useState({ width: 800, height: 500 });
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showCountdown, setShowCountdown] = useState(true);
   const { playPaddleHit, playWallHit, playScore, playPowerUp, playVictory } = useGameSounds(soundEnabled);
+  const commentator = useCommentator(commentatorEnabled);
 
   // Fullscreen toggle
   const toggleFullscreen = useCallback(() => {
@@ -114,9 +117,11 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     sounds: {
       onPaddleHit: playPaddleHit,
       onWallHit: playWallHit,
-      onScore: playScore,
-      onPowerUp: playPowerUp,
+      onScore: () => { playScore(); },
+      onPowerUp: (type: string) => { playPowerUp(); commentator.commentOnPowerUp(type); },
       onVictory: playVictory,
+      onSurvivalBallAdded: () => { commentator.commentOnSurvivalBall(); },
+      onRally: (count: number) => { commentator.commentOnRally(count); },
     },
   });
 
@@ -130,7 +135,8 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
     startGame();
-  }, [startGame]);
+    commentator.commentOnGameStart();
+  }, [startGame, commentator]);
 
   useGameMusic(musicEnabled && !gameState.isPaused && !gameState.isGameOver && !showCountdown, config.theme);
 
@@ -143,7 +149,26 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     sensitivity: config.paddleSensitivity,
   });
 
-  // Keyboard restart after game over
+  // Commentator: react to score changes
+  const prevScoresRef = useRef({ s0: 0, s1: 0 });
+  useEffect(() => {
+    const s0 = gameState.players[0].paddle.score;
+    const s1 = gameState.players[1].paddle.score;
+    if (s0 !== prevScoresRef.current.s0 || s1 !== prevScoresRef.current.s1) {
+      const scorerIndex = s0 > prevScoresRef.current.s0 ? 0 : 1;
+      commentator.commentOnScore(scorerIndex, gameState);
+      prevScoresRef.current = { s0, s1 };
+    }
+  }, [gameState.players[0].paddle.score, gameState.players[1].paddle.score, commentator, gameState]);
+
+  // Commentator: react to victory
+  useEffect(() => {
+    if (gameState.isGameOver && gameState.winner !== null) {
+      commentator.commentOnVictory(gameState.players[gameState.winner].nickname);
+    }
+    return () => { if (gameState.isGameOver) commentator.stop(); };
+  }, [gameState.isGameOver, gameState.winner, commentator, gameState.players]);
+
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (gameState.isGameOver && (e.key === ' ' || e.key === 'Enter')) {
@@ -197,6 +222,10 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
             </div>
           </Button>
 
+          <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setCommentatorEnabled(!commentatorEnabled)} style={{ color: `hsl(${theme.foreground})` }}>
+            {commentatorEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+          </Button>
+
           <Button variant="ghost" size="icon" className="w-8 h-8" onClick={toggleFullscreen} style={{ color: `hsl(${theme.foreground})` }}>
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </Button>
@@ -238,12 +267,17 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
         {/* Victory screen */}
         {gameState.isGameOver && gameState.winner !== null && (
           <VictoryScreen
-            winnerName={gameState.players[gameState.winner].nickname}
+            winnerName={config.mode === 'survival' ? 'Game Over' : gameState.players[gameState.winner].nickname}
             score1={gameState.players[0].paddle.score}
             score2={gameState.players[1].paddle.score}
             theme={theme}
             displayWidth={displaySize.width}
             displayHeight={displaySize.height}
+            survivalStats={config.mode === 'survival' ? {
+              time: gameState.stats.survivalTime,
+              ballsAdded: gameState.stats.survivalBallsAdded,
+              rallies: gameState.stats.rallies,
+            } : undefined}
           />
         )}
 
@@ -260,7 +294,7 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
         )}
 
         {/* Single-player touch zone for mobile */}
-        {isMobile && config.mode === 'single' && gameState.isPaused && !showCountdown && (
+        {isMobile && (config.mode === 'single' || config.mode === 'survival') && gameState.isPaused && !showCountdown && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-lg">
             <span className="text-sm" style={{ color: `hsl(${theme.foreground} / 0.4)` }}>
               Tocca e trascina per muovere

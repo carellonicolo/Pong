@@ -8,10 +8,15 @@ interface VictoryScreenProps {
   theme: ThemeColors;
   displayWidth: number;
   displayHeight: number;
+  survivalStats?: {
+    time: number;
+    ballsAdded: number;
+    rallies: number;
+  };
 }
 
 export const VictoryScreen: React.FC<VictoryScreenProps> = ({ 
-  winnerName, score1, score2, theme, displayWidth, displayHeight 
+  winnerName, score1, score2, theme, displayWidth, displayHeight, survivalStats
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Array<{
@@ -134,12 +139,24 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
         >
           {winnerName}
         </div>
-        <div 
-          className="text-2xl font-mono"
-          style={{ color: `hsl(${theme.foreground} / 0.8)` }}
-        >
-          {score1} — {score2}
-        </div>
+        {survivalStats ? (
+          <div className="space-y-2" style={{ color: `hsl(${theme.foreground} / 0.8)` }}>
+            <div className="text-2xl font-mono">
+              ⏱ {Math.floor(survivalStats.time / 60000)}:{String(Math.floor((survivalStats.time % 60000) / 1000)).padStart(2, '0')}
+            </div>
+            <div className="text-sm">
+              Scambi: {survivalStats.rallies} · Palle extra: {survivalStats.ballsAdded}
+            </div>
+            <div className="text-sm">Vite perse: {score2}</div>
+          </div>
+        ) : (
+          <div 
+            className="text-2xl font-mono"
+            style={{ color: `hsl(${theme.foreground} / 0.8)` }}
+          >
+            {score1} — {score2}
+          </div>
+        )}
         <div className="mt-6 text-sm" style={{ color: `hsl(${theme.foreground} / 0.5)` }}>
           SPAZIO per rigiocare
         </div>

@@ -20,7 +20,8 @@ import {
   RotateCcw,
   Home,
   Keyboard,
-  Sparkles
+  Sparkles,
+  Mic
 } from 'lucide-react';
 import { GameConfig, GameMode, GameTheme, KeyBindings, THEME_PRESETS } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,7 @@ const THEME_OPTIONS: { value: GameTheme; label: string; icon: string; descriptio
 const MODE_OPTIONS: { value: GameMode; label: string; icon: React.ReactNode; description: string }[] = [
   { value: 'single', label: 'Singolo', icon: <Gamepad2 className="w-6 h-6" />, description: 'Gioca contro la CPU' },
   { value: 'local', label: 'Locale', icon: <Users className="w-6 h-6" />, description: '2 giocatori, stesso schermo' },
+  { value: 'survival', label: 'Survival', icon: <Zap className="w-6 h-6" />, description: 'Sopravvivi il più a lungo possibile' },
   { value: 'online', label: 'Online', icon: <Globe className="w-6 h-6" />, description: 'Sfida giocatori reali' },
 ];
 
@@ -71,21 +73,22 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
   const getDefaultConfig = (mode: GameMode): GameConfig => ({
     theme: 'retro',
     mode,
-    winScore: 5,
+    winScore: mode === 'survival' ? 999 : 5,
     ballSpeed: 5,
     powerUpsEnabled: true,
     player1Color: THEME_PRESETS.retro.paddle1,
     player2Color: THEME_PRESETS.retro.paddle2,
     player1Nickname: 'Player 1',
-    player2Nickname: 'Player 2',
+    player2Nickname: mode === 'survival' ? 'CPU' : 'Player 2',
     paddleSensitivity: 0.5,
     soundEnabled: true,
     musicEnabled: true,
-    player1Keys: mode === 'single' ? { up: 'arrowup', down: 'arrowdown' } : { up: 'w', down: 's' },
+    player1Keys: (mode === 'single' || mode === 'survival') ? { up: 'arrowup', down: 'arrowdown' } : { up: 'w', down: 's' },
     player2Keys: { up: 'arrowup', down: 'arrowdown' },
-    mouseEnabled: mode === 'single',
+    mouseEnabled: (mode === 'single' || mode === 'survival'),
     particlesEnabled: true,
-    aiDifficulty: 0.5,
+    aiDifficulty: mode === 'survival' ? 0.3 : 0.5,
+    commentatorEnabled: true,
   });
 
   const [config, setConfig] = useState<GameConfig>(getDefaultConfig('single'));
@@ -105,12 +108,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
   };
 
   const handleStartGame = () => {
-    if (config.mode === 'single') {
+    if (config.mode === 'single' || config.mode === 'survival') {
       setConfig(prev => ({ ...prev, player2Nickname: 'CPU' }));
     }
     onStartGame({
       ...config,
-      player2Nickname: config.mode === 'single' ? 'CPU' : config.player2Nickname,
+      player2Nickname: (config.mode === 'single' || config.mode === 'survival') ? 'CPU' : config.player2Nickname,
     });
   };
 
@@ -295,7 +298,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                   placeholder="Giocatore 1"
                   className="h-8 text-sm"
                 />
-                {config.mode !== 'single' && (
+                {config.mode !== 'single' && config.mode !== 'survival' && (
                   <Input
                     value={config.player2Nickname}
                     onChange={(e) => setConfig(prev => ({ ...prev, player2Nickname: e.target.value }))}
@@ -307,6 +310,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
               </div>
 
               {/* Sliders stacked */}
+              {config.mode !== 'survival' && (
               <div className="space-y-1.5">
                 <div className="flex justify-between">
                   <Label className="text-xs">Punteggio vittoria</Label>
@@ -320,6 +324,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                   step={1}
                 />
               </div>
+              )}
               <div className="space-y-1.5">
                 <div className="flex justify-between">
                   <Label className="text-xs">Velocità Palla</Label>
@@ -350,7 +355,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                   step={0.1}
                 />
               </div>
-              {config.mode === 'single' && (
+              {(config.mode === 'single' || config.mode === 'survival') && (
                 <div className="space-y-1.5">
                   <div className="flex justify-between">
                     <Label className="text-xs">Difficoltà CPU</Label>
@@ -470,7 +475,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
           </div>
 
           {/* Row 4: Toggles inline */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <div className="p-2 rounded-md border flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-yellow-500" />
@@ -511,6 +516,16 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                 onCheckedChange={(checked) => setConfig(prev => ({ ...prev, musicEnabled: checked }))}
               />
             </div>
+            <div className="p-2 rounded-md border flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Mic className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-xs">Commento</span>
+              </div>
+              <Switch
+                checked={config.commentatorEnabled}
+                onCheckedChange={(checked) => setConfig(prev => ({ ...prev, commentatorEnabled: checked }))}
+              />
+            </div>
           </div>
 
           {/* Start Button */}
@@ -520,7 +535,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
             onClick={handleStartGame}
           >
             <Play className="w-4 h-4" />
-            {config.mode === 'online' ? 'Cerca Partita' : 'Inizia Partita'}
+            {config.mode === 'online' ? 'Cerca Partita' : config.mode === 'survival' ? 'Inizia Survival' : 'Inizia Partita'}
           </Button>
         </CardContent>
       </Card>
