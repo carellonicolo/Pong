@@ -6,7 +6,8 @@ import { useGameEngine } from '@/hooks/useGameEngine';
 import { useGameControls } from '@/hooks/useGameControls';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useGameSounds } from '@/hooks/useGameSounds';
-import { Pause, Play, RotateCcw, Home, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import { useGameMusic } from '@/hooks/useGameMusic';
+import { Pause, Play, RotateCcw, Home, Volume2, VolumeX, Maximize, Minimize, Music } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,10 +30,12 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isMobile = useIsMobile();
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [musicEnabled, setMusicEnabled] = useState(false);
   const [displaySize, setDisplaySize] = useState({ width: 800, height: 500 });
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { playPaddleHit, playWallHit, playScore, playPowerUp, playVictory } = useGameSounds(soundEnabled);
+
 
   // Fullscreen toggle
   const toggleFullscreen = useCallback(() => {
@@ -127,6 +130,9 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
     },
   });
 
+  // Background music - plays only when game is active (not paused, not game over)
+  useGameMusic(musicEnabled && !gameState.isPaused && !gameState.isGameOver);
+
   const { handleMouseMove, handleTouchMove } = useGameControls({
     mode: config.mode,
     canvasRef,
@@ -180,8 +186,19 @@ export const PongGame: React.FC<PongGameProps> = ({ config, onBackToMenu, onGame
             size="icon"
             onClick={() => setSoundEnabled(!soundEnabled)}
             style={{ color: `hsl(${theme.foreground})` }}
+            title={soundEnabled ? 'Disattiva effetti sonori' : 'Attiva effetti sonori'}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMusicEnabled(!musicEnabled)}
+            style={{ color: `hsl(${theme.foreground})`, opacity: musicEnabled ? 1 : 0.4 }}
+            title={musicEnabled ? 'Disattiva musica' : 'Attiva musica'}
+          >
+            <Music className="w-4 h-4" />
           </Button>
 
           <Button
