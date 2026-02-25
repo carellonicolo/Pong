@@ -18,6 +18,7 @@ import {
   Volume2,
   Music,
   RotateCcw,
+  Home,
   Keyboard,
   Sparkles
 } from 'lucide-react';
@@ -246,8 +247,9 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onViewLeaderboa
                 <RotateCcw className="w-3 h-3 mr-1" />
                 Default
               </Button>
-              <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => setShowConfig(false)}>
-                ← Indietro
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => setShowConfig(false)} title="Torna alla home">
+                <Home className="w-3 h-3 mr-1" />
+                Home
               </Button>
             </div>
           </div>
